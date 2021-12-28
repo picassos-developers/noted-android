@@ -18,7 +18,6 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -29,6 +28,7 @@ import com.picassos.noted.databases.APP_DATABASE;
 import com.picassos.noted.entities.Todo;
 import com.picassos.noted.sharedPreferences.SharedPref;
 import com.picassos.noted.utils.Helper;
+import com.picassos.noted.utils.Toasto;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -72,7 +72,7 @@ public class AddTodoBottomSheetModal extends BottomSheetDialogFragment {
                     saveTodo(todoTitle.getText().toString());
                     Objects.requireNonNull(inputMethodManager).toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
                 } else {
-                    Toast.makeText(getContext(), getString(R.string.todo_title_required), Toast.LENGTH_SHORT).show();
+                    Toasto.show_toast(requireContext(), getString(R.string.todo_title_required), 1, 2);
                 }
             }
             return false;

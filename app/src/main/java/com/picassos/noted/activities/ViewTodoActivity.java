@@ -10,9 +10,7 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.MobileAds;
@@ -21,17 +19,14 @@ import com.google.android.gms.ads.reward.RewardedVideoAd;
 import com.google.android.gms.ads.reward.RewardedVideoAdListener;
 import com.picassos.noted.R;
 import com.picassos.noted.constants.Constants;
+import com.picassos.noted.constants.RequestCodes;
 import com.picassos.noted.databases.APP_DATABASE;
 import com.picassos.noted.entities.Todo;
 import com.picassos.noted.sheets.TodoMoveToBottomSheetModal;
 import com.picassos.noted.utils.Helper;
+import com.picassos.noted.utils.Toasto;
 
 public class ViewTodoActivity extends AppCompatActivity implements RewardedVideoAdListener, TodoMoveToBottomSheetModal.OnMoveListener {
-
-    // Request Codes
-    private final static int REQUEST_DELETE_TODO_CODE = 1;
-    private final static int REQUEST_MARK_TODO_CODE = 2;
-    private final static int REQUEST_SAVE_TODO_CODE = 3;
 
     // States
     private final static int STATE_UNCOMPLETED = 0;
@@ -82,17 +77,14 @@ public class ViewTodoActivity extends AppCompatActivity implements RewardedVideo
             bundle.putSerializable("todo_data", presetTodo);
         }
 
-        // return back and finish activity
-        ImageView goBack = findViewById(R.id.go_back);
-        goBack.setOnClickListener(v -> requestSaveTodo(presetTodo));
+        // finish activity
+        findViewById(R.id.go_back).setOnClickListener(v -> requestSaveTodo(presetTodo));
 
         // delete to-do
-        ImageView deleteTodo = findViewById(R.id.todo_delete);
-        deleteTodo.setOnClickListener(v -> requestDeleteTodo(presetTodo));
+        findViewById(R.id.todo_delete).setOnClickListener(v -> requestDeleteTodo(presetTodo));
 
         // more options
-        ImageView moreOptions = findViewById(R.id.more_options);
-        moreOptions.setOnClickListener(v -> {
+        findViewById(R.id.more_options).setOnClickListener(v -> {
             bundle.putSerializable("todo_data", presetTodo);
             TodoMoveToBottomSheetModal todoMoveToBottomSheetModal = new TodoMoveToBottomSheetModal();
             todoMoveToBottomSheetModal.setArguments(bundle);
@@ -152,7 +144,7 @@ public class ViewTodoActivity extends AppCompatActivity implements RewardedVideo
                 protected void onPostExecute(Void aVoid) {
                     super.onPostExecute(aVoid);
                     Intent intent = new Intent();
-                    intent.putExtra("requestCode", REQUEST_DELETE_TODO_CODE);
+                    intent.putExtra("request", RequestCodes.REQUEST_DELETE_TODO_CODE);
                     setResult(RESULT_OK, intent);
                     finish();
                 }
@@ -180,7 +172,7 @@ public class ViewTodoActivity extends AppCompatActivity implements RewardedVideo
                 protected void onPostExecute(Void aVoid) {
                     super.onPostExecute(aVoid);
                     Intent intent = new Intent();
-                    intent.putExtra("requestCode", REQUEST_MARK_TODO_CODE);
+                    intent.putExtra("request", RequestCodes.REQUEST_MARK_TODO_CODE);
                     setResult(RESULT_OK, intent);
                     finish();
                 }
@@ -220,13 +212,13 @@ public class ViewTodoActivity extends AppCompatActivity implements RewardedVideo
                                 rewardedVideoAd.show();
                             } else {
                                 Intent intent = new Intent();
-                                intent.putExtra("requestCode", REQUEST_SAVE_TODO_CODE);
+                                intent.putExtra("request", RequestCodes.REQUEST_SAVE_TODO_CODE);
                                 setResult(RESULT_OK, intent);
                                 finish();
                             }
                         } else {
                             Intent intent = new Intent();
-                            intent.putExtra("requestCode", REQUEST_SAVE_TODO_CODE);
+                            intent.putExtra("request", RequestCodes.REQUEST_SAVE_TODO_CODE);
                             setResult(RESULT_OK, intent);
                             finish();
                         }
@@ -235,7 +227,7 @@ public class ViewTodoActivity extends AppCompatActivity implements RewardedVideo
 
                 new SaveTodoTask().execute();
             } else {
-                Toast.makeText(this, getString(R.string.todo_title_required), Toast.LENGTH_SHORT).show();
+                Toasto.show_toast(this, getString(R.string.todo_title_required), 1, 2);
             }
         }
     }
@@ -267,7 +259,7 @@ public class ViewTodoActivity extends AppCompatActivity implements RewardedVideo
     public void onRewardedVideoAdClosed() {
         loadRewardedVideoAd();
         Intent intent = new Intent();
-        intent.putExtra("requestCode", REQUEST_SAVE_TODO_CODE);
+        intent.putExtra("request", RequestCodes.REQUEST_SAVE_TODO_CODE);
         setResult(RESULT_OK, intent);
         finish();
     }
@@ -276,7 +268,7 @@ public class ViewTodoActivity extends AppCompatActivity implements RewardedVideo
     public void onRewarded(RewardItem rewardItem) {
         loadRewardedVideoAd();
         Intent intent = new Intent();
-        intent.putExtra("requestCode", REQUEST_SAVE_TODO_CODE);
+        intent.putExtra("request", RequestCodes.REQUEST_SAVE_TODO_CODE);
         setResult(RESULT_OK, intent);
         finish();
     }

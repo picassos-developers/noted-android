@@ -13,7 +13,6 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -28,6 +27,7 @@ import com.picassos.noted.databases.APP_DATABASE;
 import com.picassos.noted.entities.TrashNote;
 import com.picassos.noted.listeners.TrashNotesListener;
 import com.picassos.noted.sheets.TrashNoteActionsBottomSheetModal;
+import com.picassos.noted.utils.Toasto;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -183,14 +183,14 @@ public class TrashFragment extends Fragment implements TrashNotesListener {
         // restore note
         if (resultCode == TrashNoteActionsBottomSheetModal.REQUEST_RESTORE_NOTE_CODE) {
             requestTrashNotes();
-            Toast.makeText(getContext(), getString(R.string.note_restored), Toast.LENGTH_SHORT).show();
+            Toasto.show_toast(requireContext(), getString(R.string.note_restored), 1, 0);
         // delete note
         } else if (resultCode == TrashNoteActionsBottomSheetModal.REQUEST_DELETE_NOTE_CODE) {
             requestTrashNotes();
-            Toast.makeText(getContext(), getString(R.string.note_deleted_permanently), Toast.LENGTH_SHORT).show();
+            Toasto.show_toast(requireContext(), getString(R.string.note_deleted_permanently), 1, 0);
         // discard note
         } else if (resultCode == TrashNoteActionsBottomSheetModal.REQUEST_DISCARD_NOTE_CODE) {
-            Toast.makeText(getContext(), getString(R.string.note_discarded), Toast.LENGTH_SHORT).show();
+            Toasto.show_toast(requireContext(), getString(R.string.note_discarded), 1, 0);
         }
     }
 }

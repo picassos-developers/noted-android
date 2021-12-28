@@ -1,7 +1,8 @@
 package com.picassos.noted.activities;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.biometric.BiometricManager;
 import androidx.biometric.BiometricPrompt;
@@ -14,22 +15,23 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.picassos.noted.R;
 import com.picassos.noted.constants.Constants;
+import com.picassos.noted.constants.RequestCodes;
 import com.picassos.noted.databases.APP_DATABASE;
 import com.picassos.noted.databases.DAO;
 import com.picassos.noted.entities.Category;
 import com.picassos.noted.entities.Notification;
 import com.picassos.noted.sharedPreferences.SharedPref;
+import com.picassos.noted.utils.Toasto;
 
 import java.util.concurrent.Executor;
 
+@SuppressLint("CustomSplashScreen")
 public class SplashActivity extends AppCompatActivity {
 
     SharedPref sharedPref;
-    public static final int INTENT_AUTH_REQUEST_CODE = 1;
 
     @Override
     protected void onNewIntent(Intent intent) {
@@ -178,12 +180,13 @@ public class SplashActivity extends AppCompatActivity {
                     KeyguardManager keyguardManager = (KeyguardManager) getSystemService(KEYGUARD_SERVICE);
                     if (keyguardManager.isKeyguardSecure()) {
                         Intent intent = keyguardManager.createConfirmDeviceCredentialIntent("", "");
-                        startActivityForResult(intent, INTENT_AUTH_REQUEST_CODE);
+                        intent.putExtra("request", RequestCodes.INTENT_AUTH_REQUEST_CODE);
+                        startActivityForResult.launch(intent);
                     } else {
                         requestLaunchMainInstance();
                     }
                 } else {
-                    Toast.makeText(SplashActivity.this, errString.toString(), Toast.LENGTH_SHORT).show();
+                    Toasto.show_toast(getApplicationContext(), errString.toString(), 1, 1);
                 }
             }
 
@@ -196,7 +199,7 @@ public class SplashActivity extends AppCompatActivity {
             @Override
             public void onAuthenticationFailed() {
                 super.onAuthenticationFailed();
-                Toast.makeText(SplashActivity.this, "Failed", Toast.LENGTH_SHORT).show();
+                Toasto.show_toast(getApplicationContext(), "Failed", 1, 2);
             }
         });
 
@@ -225,13 +228,14 @@ public class SplashActivity extends AppCompatActivity {
         dao.requestInsertNotification(notification);
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == INTENT_AUTH_REQUEST_CODE) {
-            if (resultCode == RESULT_OK) {
-                requestLaunchMainInstance();
+    @SuppressLint("NotifyDataSetChanged")
+    ActivityResultLauncher<Intent> startActivityForResult = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+        if (result != null && result.getResultCode() == RESULT_OK) {
+            if (result.getData() != null) {
+                if (result.getData().getIntExtra("request", 0) == RequestCodes.INTENT_AUTH_REQUEST_CODE) {
+                    requestLaunchMainInstance();
+                }
             }
         }
-    }
+    });
 }

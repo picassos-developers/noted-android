@@ -13,13 +13,13 @@ import android.text.TextWatcher;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.Toast;
 
 import com.picassos.noted.R;
+import com.picassos.noted.constants.RequestCodes;
 import com.picassos.noted.databases.APP_DATABASE;
 import com.picassos.noted.entities.TodosList;
 import com.picassos.noted.utils.Helper;
+import com.picassos.noted.utils.Toasto;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -27,9 +27,6 @@ import java.util.Locale;
 import java.util.Objects;
 
 public class TodoCreateListActivity extends AppCompatActivity {
-
-    // Request Codes
-    public static final int REQUEST_CREATE_LIST_CODE = 1;
 
     Button saveList;
     EditText listTitle;
@@ -45,9 +42,8 @@ public class TodoCreateListActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_todo_create_list);
 
-        // return back and finish activity
-        ImageView goBack = findViewById(R.id.go_back);
-        goBack.setOnClickListener(v -> finish());
+        // finish activity
+        findViewById(R.id.go_back).setOnClickListener(v -> finish());
 
         // list title
         listTitle = findViewById(R.id.todo_list_title);
@@ -63,7 +59,7 @@ public class TodoCreateListActivity extends AppCompatActivity {
             if (!TextUtils.isEmpty(listTitle.getText().toString())) {
                 requestSaveList(listTitle.getText().toString());
             } else {
-                Toast.makeText(this, getString(R.string.todo_list_title_required), Toast.LENGTH_SHORT).show();
+                Toasto.show_toast(this, getString(R.string.todo_list_title_required), 1, 2);
             }
         });
     }
@@ -96,7 +92,7 @@ public class TodoCreateListActivity extends AppCompatActivity {
 
                 Intent intent = new Intent();
                 intent.putExtra("is_added", true);
-                setResult(REQUEST_CREATE_LIST_CODE, intent);
+                setResult(RequestCodes.REQUEST_CREATE_LIST_CODE, intent);
                 finish();
             }
 

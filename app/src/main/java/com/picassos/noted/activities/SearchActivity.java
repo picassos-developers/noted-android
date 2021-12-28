@@ -1,5 +1,7 @@
 package com.picassos.noted.activities;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
@@ -17,10 +19,10 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import com.picassos.noted.R;
 import com.picassos.noted.adapters.NotesAdapter;
+import com.picassos.noted.constants.RequestCodes;
 import com.picassos.noted.databases.APP_DATABASE;
 import com.picassos.noted.entities.Note;
 import com.picassos.noted.listeners.NotesActionListener;
@@ -28,6 +30,7 @@ import com.picassos.noted.listeners.NotesListener;
 import com.picassos.noted.sharedPreferences.SharedPref;
 import com.picassos.noted.sheets.ImplementedPasswordBottomSheetModal;
 import com.picassos.noted.utils.Helper;
+import com.picassos.noted.utils.Toasto;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,10 +41,6 @@ public class SearchActivity extends AppCompatActivity implements NotesListener, 
 
     Bundle bundle;
     SharedPref sharedPref;
-
-    // REQUEST CODES
-    private final int REQUEST_CODE_UPDATE_NOTE_OK = 2;
-    private final int REQUEST_CODE_TEXT_TO_SPEECH = 4;
 
     private List<Note> notes;
     private NotesAdapter notesAdapter;
@@ -57,6 +56,7 @@ public class SearchActivity extends AppCompatActivity implements NotesListener, 
 
     int noteClickedPosition = -1;
 
+    @SuppressLint("NotifyDataSetChanged")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -108,14 +108,15 @@ public class SearchActivity extends AppCompatActivity implements NotesListener, 
         ImageView searchMic = findViewById(R.id.search_mic);
         searchMic.setOnClickListener(v -> {
             Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+            intent.putExtra("request", RequestCodes.REQUEST_CODE_UPDATE_NOTE_OK);
             intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
             intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
             intent.putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.speak_notes));
 
             try {
-                startActivityForResult(intent, REQUEST_CODE_TEXT_TO_SPEECH);
+                startActivityForResult.launch(intent);
             } catch (Exception e) {
-                Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                Toasto.show_toast(this, e.getMessage(), 1, 1);
             }
         });
 
@@ -187,6 +188,7 @@ public class SearchActivity extends AppCompatActivity implements NotesListener, 
                 }
             }
 
+            @SuppressLint("NotifyDataSetChanged")
             @Override
             protected void onPostExecute(List<Note> notes_inline) {
                 super.onPostExecute(notes_inline);
@@ -210,7 +212,7 @@ public class SearchActivity extends AppCompatActivity implements NotesListener, 
             }
         }
 
-        @SuppressLint("SetTextI18n")
+        @SuppressLint({"SetTextI18n", "NotifyDataSetChanged"})
         @Override
         public void onTextChanged(CharSequence s, int start, int before, int count) {
             notes.clear();
@@ -226,17 +228,18 @@ public class SearchActivity extends AppCompatActivity implements NotesListener, 
         }
     };
 
+    @SuppressLint("NotifyDataSetChanged")
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_CODE_TEXT_TO_SPEECH) {
+        if (requestCode == RequestCodes.REQUEST_CODE_TEXT_TO_SPEECH) {
             if (resultCode == RESULT_OK && null != data) {
                 ArrayList<String> result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
                 if (result != null) {
                     searchBar.setText(result.get(0));
                 }
             }
-        } else if (requestCode == REQUEST_CODE_UPDATE_NOTE_OK && resultCode == RESULT_OK) {
+        } else if (requestCode == RequestCodes.REQUEST_CODE_UPDATE_NOTE_OK && resultCode == RESULT_OK) {
             notes.clear();
             notesAdapter.notifyDataSetChanged();
             request_search_notes(searchBar.getText().toString());
@@ -251,7 +254,7 @@ public class SearchActivity extends AppCompatActivity implements NotesListener, 
             Intent intent = new Intent(SearchActivity.this, AddNoteActivity.class);
             intent.putExtra("modifier", true);
             intent.putExtra("note", note);
-            startActivityForResult(intent, REQUEST_CODE_UPDATE_NOTE_OK);
+            startActivityForResult.launch(intent);
         } else {
             if (note.isNote_locked()) {
                 bundle.putSerializable("data", note);
@@ -261,9 +264,10 @@ public class SearchActivity extends AppCompatActivity implements NotesListener, 
                 passwordBottomSheetModal.show(getSupportFragmentManager(), "TAG");
             } else {
                 Intent intent = new Intent(SearchActivity.this, AddNoteActivity.class);
+                intent.putExtra("request", RequestCodes.REQUEST_CODE_UPDATE_NOTE_OK);
                 intent.putExtra("modifier", true);
                 intent.putExtra("note", note);
-                startActivityForResult(intent, REQUEST_CODE_UPDATE_NOTE_OK);
+                startActivityForResult.launch(intent);
             }
         }
     }
@@ -281,9 +285,10 @@ public class SearchActivity extends AppCompatActivity implements NotesListener, 
     @Override
     public void onUnlockListener(Note note) {
         Intent intent = new Intent(SearchActivity.this, AddNoteActivity.class);
+        intent.putExtra("request", RequestCodes.REQUEST_CODE_UPDATE_NOTE_OK);
         intent.putExtra("modifier", true);
         intent.putExtra("note", note);
-        startActivityForResult(intent, REQUEST_CODE_UPDATE_NOTE_OK);
+        startActivityForResult.launch(intent);
     }
 
     /**
@@ -397,4 +402,25 @@ public class SearchActivity extends AppCompatActivity implements NotesListener, 
             finish();
         }
     }
+
+    @SuppressLint("NotifyDataSetChanged")
+    ActivityResultLauncher<Intent> startActivityForResult = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+        if (result != null && result.getResultCode() == RESULT_OK) {
+            if (result.getData() != null) {
+                switch (result.getData().getIntExtra("request", 0)) {
+                    case RequestCodes.REQUEST_CODE_TEXT_TO_SPEECH:
+                        ArrayList<String> callback = result.getData().getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                        if (callback != null) {
+                            searchBar.setText(callback.get(0));
+                        }
+                        break;
+                    case RequestCodes.REQUEST_CODE_UPDATE_NOTE_OK:
+                        notes.clear();
+                        notesAdapter.notifyDataSetChanged();
+                        request_search_notes(searchBar.getText().toString());
+                        break;
+                }
+            }
+        }
+    });
 }

@@ -19,6 +19,7 @@ import com.picassos.noted.R;
 import com.picassos.noted.activities.TodoCreateListActivity;
 import com.picassos.noted.activities.TodoListActivity;
 import com.picassos.noted.adapters.TodoListAdapter;
+import com.picassos.noted.constants.RequestCodes;
 import com.picassos.noted.databases.APP_DATABASE;
 import com.picassos.noted.entities.TodosList;
 import com.picassos.noted.listeners.TodoListListener;
@@ -81,6 +82,7 @@ public class TodoListsBottomSheetModal extends BottomSheetDialogFragment impleme
                 return APP_DATABASE.requestDatabase(getContext()).dao().request_todos_lists();
             }
 
+            @SuppressLint("NotifyDataSetChanged")
             @Override
             protected void onPostExecute(List<TodosList> todo_list_inline) {
                 super.onPostExecute(todo_list_inline);
@@ -99,11 +101,12 @@ public class TodoListsBottomSheetModal extends BottomSheetDialogFragment impleme
         startActivityForResult(intent, REQUEST_UPDATE_LIST_CODE);
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         switch (requestCode) {
-            case TodoCreateListActivity.REQUEST_CREATE_LIST_CODE:
+            case RequestCodes.REQUEST_CREATE_LIST_CODE:
                 if (data != null) {
                     if (data.getBooleanExtra("is_added", false)) {
                         todosLists.clear();

@@ -10,7 +10,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import com.picassos.noted.R;
 import com.picassos.noted.adapters.CategoriesAdapter;
@@ -20,6 +19,7 @@ import com.picassos.noted.listeners.CategoriesListener;
 import com.picassos.noted.sheets.AddCategoryBottomSheetModal;
 import com.picassos.noted.sheets.EditCategoryBottomSheetModal;
 import com.picassos.noted.utils.Helper;
+import com.picassos.noted.utils.Toasto;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -87,6 +87,7 @@ public class EditCategoryActivity extends AppCompatActivity implements Categorie
                 return APP_DATABASE.requestDatabase(getApplicationContext()).dao().request_categories();
             }
 
+            @SuppressLint("NotifyDataSetChanged")
             @Override
             protected void onPostExecute(List<Category> categories_inline) {
                 super.onPostExecute(categories_inline);
@@ -117,7 +118,7 @@ public class EditCategoryActivity extends AppCompatActivity implements Categorie
                 categories.remove(categoryClickedPosition);
                 categoriesAdapter.notifyItemRemoved(categoryClickedPosition);
 
-                Toast.makeText(EditCategoryActivity.this, getString(R.string.category_deleted), Toast.LENGTH_SHORT).show();
+                Toasto.show_toast(getApplicationContext(), getString(R.string.category_deleted), 0, 0);
             }
         }
 
@@ -143,6 +144,7 @@ public class EditCategoryActivity extends AppCompatActivity implements Categorie
         editCategoryBottomSheetModal.show(getSupportFragmentManager(), "TAG");
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     @Override
     public void onAddListener(int requestCode) {
         int REQUEST_ADD_CATEGORY_CODE = 3;
@@ -152,10 +154,11 @@ public class EditCategoryActivity extends AppCompatActivity implements Categorie
             categoriesAdapter.notifyDataSetChanged();
             requestCategories();
 
-            Toast.makeText(this, getString(R.string.category_added), Toast.LENGTH_SHORT).show();
+            Toasto.show_toast(this, getString(R.string.category_added), 0, 0);
         }
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     @Override
     public void onEditListener(int requestCode) {
         int REQUEST_EDIT_CATEGORY_CODE = 4;
@@ -165,7 +168,7 @@ public class EditCategoryActivity extends AppCompatActivity implements Categorie
             categoriesAdapter.notifyDataSetChanged();
             requestCategories();
 
-            Toast.makeText(this, getString(R.string.category_edited), Toast.LENGTH_SHORT).show();
+            Toasto.show_toast(this, getString(R.string.category_edited), 0, 0);
         }
     }
 

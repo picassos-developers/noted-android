@@ -1,6 +1,7 @@
 package com.picassos.noted.activities;
 
-import androidx.annotation.Nullable;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ShareCompat;
 
@@ -46,6 +47,7 @@ import com.google.android.gms.ads.reward.RewardedVideoAdListener;
 import com.makeramen.roundedimageview.RoundedImageView;
 import com.picassos.noted.R;
 import com.picassos.noted.constants.Constants;
+import com.picassos.noted.constants.RequestCodes;
 import com.picassos.noted.databases.APP_DATABASE;
 import com.picassos.noted.entities.Category;
 import com.picassos.noted.entities.Note;
@@ -55,6 +57,7 @@ import com.picassos.noted.sheets.CategoriesBottomSheetModal;
 import com.picassos.noted.sheets.MoreActionsBottomSheetModal;
 import com.picassos.noted.sheets.ReminderBottomSheetModal;
 import com.picassos.noted.utils.Helper;
+import com.picassos.noted.utils.Toasto;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -73,12 +76,6 @@ public class AddNoteActivity extends AppCompatActivity implements MoreActionsBot
 
     // Bundle
     private Bundle bundle;
-
-    // REQUEST CODES
-    private static final int REQUEST_DELETE_NOTE_CODE = 3;
-    private static final int REQUEST_DISCARD_NOTE_CODE = 4;
-    private static final int REQUEST_VIEW_NOTE_IMAGE = 5;
-    private static final int REQUEST_VIEW_NOTE_VIDEO = 6;
 
     /**
      * note fields added to activity
@@ -211,7 +208,7 @@ public class AddNoteActivity extends AppCompatActivity implements MoreActionsBot
         noteImage.setOnClickListener(v -> {
             Intent intent = new Intent(AddNoteActivity.this, ViewAttachedImageActivity.class);
             intent.putExtra("image_path", selectedImagePath);
-            startActivityForResult(intent, REQUEST_VIEW_NOTE_IMAGE);
+            startActivityForResult.launch(intent);
         });
 
         ImageView attachImage = findViewById(R.id.attach_image);
@@ -288,7 +285,7 @@ public class AddNoteActivity extends AppCompatActivity implements MoreActionsBot
         noteVideo.setOnClickListener(v -> {
             Intent intent = new Intent(AddNoteActivity.this, ViewAttachedVideoActivity.class);
             intent.putExtra("video_path", selectedVideoPath);
-            startActivityForResult(intent, REQUEST_VIEW_NOTE_VIDEO);
+            startActivityForResult.launch(intent);
         });
 
         findViewById(R.id.note_video_remove).setOnClickListener(v -> {
@@ -370,12 +367,12 @@ public class AddNoteActivity extends AppCompatActivity implements MoreActionsBot
         noteSave.setOnClickListener(v -> {
             if (!TextUtils.isEmpty(noteTitle.getText())) {
                 if (TextUtils.isEmpty(noteSubtitle.getText().toString()) || TextUtils.isEmpty(noteDescription.getText().toString())) {
-                    Toast.makeText(this, getString(R.string.note_fields_required), Toast.LENGTH_SHORT).show();
+                    Toasto.show_toast(this, getString(R.string.note_fields_required), 1, 2);
                 } else {
                     saveNote( noteTitle.getText().toString(), noteCreatedAt.getText().toString(), noteSubtitle.getText().toString(), selectedNoteColor, noteDescription.getText().toString(), selectedImagePath, selectedImageUri.toString(), selectedVideoPath, isLocked);
                 }
             } else {
-                Toast.makeText(this, getString(R.string.note_title_required), Toast.LENGTH_SHORT).show();
+                Toasto.show_toast(this, getString(R.string.note_title_required), 1, 2);
             }
         });
 
@@ -534,11 +531,13 @@ public class AddNoteActivity extends AppCompatActivity implements MoreActionsBot
                         rewardedVideoAd.show();
                     } else {
                         Intent intent = new Intent();
+                        intent.putExtra("request", RequestCodes.REQUEST_CODE_UPDATE_NOTE_OK);
                         setResult(RESULT_OK, intent);
                         finish();
                     }
                 } else {
                     Intent intent = new Intent();
+                    intent.putExtra("request", RequestCodes.REQUEST_CODE_UPDATE_NOTE_OK);
                     setResult(RESULT_OK, intent);
                     finish();
                 }
@@ -675,9 +674,9 @@ public class AddNoteActivity extends AppCompatActivity implements MoreActionsBot
         addLink = attachLinkDialog.findViewById(R.id.add_link);
         addLink.setOnClickListener(v -> {
             if (link.getText().toString().trim().isEmpty()) {
-                Toast.makeText(this, getString(R.string.link_url_empty), Toast.LENGTH_SHORT).show();
+                Toasto.show_toast(this, getString(R.string.link_url_empty), 1, 2);
             } else if (!Patterns.WEB_URL.matcher(link.getText().toString()).matches()) {
-                Toast.makeText(this, R.string.invalid_url, Toast.LENGTH_SHORT).show();
+                Toasto.show_toast(this, getString(R.string.invalid_url), 1, 2);
             } else {
                 noteWebUrl.setText(link.getText().toString());
                 noteWebUrlContainer.setVisibility(View.VISIBLE);
@@ -765,7 +764,7 @@ public class AddNoteActivity extends AppCompatActivity implements MoreActionsBot
             TextView reminderText = findViewById(R.id.reminder_set_text);
             reminderText.setText(reminderSet);
 
-            Toast.makeText(this, getString(R.string.reminder_set_successfully), Toast.LENGTH_SHORT).show();
+            Toasto.show_toast(this, getString(R.string.reminder_set_successfully), 1, 0);
 
             addReminderDialog.dismiss();
         });
@@ -807,8 +806,8 @@ public class AddNoteActivity extends AppCompatActivity implements MoreActionsBot
             InputStream inputStream = getContentResolver().openInputStream(uri);
             FileOutputStream outputStream = new FileOutputStream(file);
 
-            int read = 0;
-            int maxBufferSize = 1 * 1024 * 1024;
+            int read;
+            int maxBufferSize = 1024 * 1024;
             int bytesAvailable = Objects.requireNonNull(inputStream).available();
 
             int bufferSize = Math.min(bytesAvailable, maxBufferSize);
@@ -822,7 +821,7 @@ public class AddNoteActivity extends AppCompatActivity implements MoreActionsBot
             inputStream.close();
             outputStream.close();
         } catch (Exception e) {
-            Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
+            Toasto.show_toast(this, e.getMessage(), 1, 1);
         }
         return file.getPath();
     }
@@ -876,42 +875,17 @@ public class AddNoteActivity extends AppCompatActivity implements MoreActionsBot
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == REQUEST_VIEW_NOTE_IMAGE && resultCode == RESULT_OK) {
-            if (data != null) {
-                if (Objects.requireNonNull(data.getStringExtra("request")).equals("remove_image")) {
-                    // remove image
-                    noteImage.setImageBitmap(null);
-                    findViewById(R.id.note_image_container).setVisibility(View.GONE);
-                    selectedImagePath = "";
-                }
-            }
-        } else if (requestCode == REQUEST_VIEW_NOTE_VIDEO && resultCode == RESULT_OK) {
-            if (data != null) {
-                if (data.getStringExtra("request").equals("remove_video")) {
-                    // remove video
-                    noteVideo.setImageBitmap(null);
-                    findViewById(R.id.note_video_container).setVisibility(View.GONE);
-                    selectedVideoPath = "";
-                }
-            }
-        }
-    }
-
-    @Override
     public void onDeleteListener(int requestCode) {
         /* check if the returned request code
         * belongs to a deleted note then close
         * the activity and refresh the recycler view */
-        if (requestCode == REQUEST_DELETE_NOTE_CODE) {
+        if (requestCode == RequestCodes.REQUEST_DELETE_NOTE_CODE) {
             Intent intent = new Intent();
             intent.putExtra("is_note_removed", true);
             setResult(RESULT_OK, intent);
-            Toast.makeText(this, getString(R.string.note_moved_to_trash), Toast.LENGTH_SHORT).show();
+            Toasto.show_toast(this, getString(R.string.note_moved_to_trash), 1, 0);
             finish();
-        } else if (requestCode == REQUEST_DISCARD_NOTE_CODE) {
+        } else if (requestCode == RequestCodes.REQUEST_DISCARD_NOTE_CODE) {
             finish();
         }
     }
@@ -925,7 +899,7 @@ public class AddNoteActivity extends AppCompatActivity implements MoreActionsBot
                 TextView note_category = findViewById(R.id.note_category);
                 note_category.setText(category.getCategory_title());
 
-                Toast.makeText(this, category.getCategory_title() + " " + getString(R.string.category_is_selected), Toast.LENGTH_SHORT).show();
+                Toasto.show_toast(this, category.getCategory_title() + " " + getString(R.string.category_is_selected), 1, 0);
             }
         }
     }
@@ -935,7 +909,7 @@ public class AddNoteActivity extends AppCompatActivity implements MoreActionsBot
         if (!TextUtils.isEmpty(noteTitle.getText().toString()) && !TextUtils.isEmpty(noteSubtitle.getText().toString())) {
             requestOpenReminder(noteTitle.getText().toString(), noteSubtitle.getText().toString());
         } else {
-            Toast.makeText(this, getString(R.string.note_title_subtitle_empty), Toast.LENGTH_SHORT).show();
+            Toasto.show_toast(this, getString(R.string.note_title_subtitle_empty), 1, 2);
         }
     }
 
@@ -946,7 +920,7 @@ public class AddNoteActivity extends AppCompatActivity implements MoreActionsBot
         TextView reminderText = findViewById(R.id.reminder_set_text);
         reminderText.setText("");
 
-        Toast.makeText(this, getString(R.string.reminder_removed), Toast.LENGTH_SHORT).show();
+        Toasto.show_toast(this, getString(R.string.reminder_removed), 1, 0);
     }
 
     /**
@@ -1060,4 +1034,24 @@ public class AddNoteActivity extends AppCompatActivity implements MoreActionsBot
             noteDescription.append(" " + text);
         }
     }
+
+    @SuppressLint("NotifyDataSetChanged")
+    ActivityResultLauncher<Intent> startActivityForResult = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+        if (result != null && result.getResultCode() == RESULT_OK) {
+            if (result.getData() != null) {
+                switch (result.getData().getIntExtra("request", 0)) {
+                    case RequestCodes.REQUEST_REMOVE_NOTE_IMAGE_CODE:
+                        noteImage.setImageBitmap(null);
+                        findViewById(R.id.note_image_container).setVisibility(View.GONE);
+                        selectedImagePath = "";
+                        break;
+                    case RequestCodes.REQUEST_REMOVE_NOTE_VIDEO_CODE:
+                        noteVideo.setImageBitmap(null);
+                        findViewById(R.id.note_video_container).setVisibility(View.GONE);
+                        selectedVideoPath = "";
+                        break;
+                }
+            }
+        }
+    });
 }

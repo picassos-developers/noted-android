@@ -1,35 +1,33 @@
 package com.picassos.noted.activities;
 
-import androidx.annotation.Nullable;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.picassos.noted.R;
 import com.picassos.noted.adapters.TodosAdapter;
+import com.picassos.noted.constants.RequestCodes;
 import com.picassos.noted.databases.APP_DATABASE;
 import com.picassos.noted.entities.Todo;
 import com.picassos.noted.entities.TodosList;
 import com.picassos.noted.listeners.TodosListener;
 import com.picassos.noted.utils.Helper;
+import com.picassos.noted.utils.Toasto;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class TodoListActivity extends AppCompatActivity implements TodosListener {
-
-    // Request Codes
-    private final static int REQUEST_VIEW_TODO_CODE = 2;
 
     // Bundle
     Bundle bundle;
@@ -61,7 +59,7 @@ public class TodoListActivity extends AppCompatActivity implements TodosListener
         if (getIntent().getSerializableExtra("todo_list") != null) {
             todosList = (TodosList) getIntent().getSerializableExtra("todo_list");
         } else {
-            Toast.makeText(this, getString(R.string.error_empty_list), Toast.LENGTH_SHORT).show();
+            Toasto.show_toast(this, getString(R.string.error_empty_list), 1, 2);
         }
 
         // return back and finish activity
@@ -97,6 +95,7 @@ public class TodoListActivity extends AppCompatActivity implements TodosListener
                 return APP_DATABASE.requestDatabase(getApplicationContext()).dao().request_todos_by_list(todosList.getTodo_list_identifier());
             }
 
+            @SuppressLint("NotifyDataSetChanged")
             @Override
             protected void onPostExecute(List<Todo> todos_inline) {
                 super.onPostExecute(todos_inline);
@@ -118,7 +117,7 @@ public class TodoListActivity extends AppCompatActivity implements TodosListener
         Intent intent = new Intent(TodoListActivity.this, ViewTodoActivity.class);
         intent.putExtra("modifier", true);
         intent.putExtra("todo", todo);
-        startActivityForResult(intent, REQUEST_VIEW_TODO_CODE);
+        startActivityForResult.launch(intent);
     }
 
     @Override
@@ -154,29 +153,28 @@ public class TodoListActivity extends AppCompatActivity implements TodosListener
     /**
      * refresh todos list
      */
+    @SuppressLint("NotifyDataSetChanged")
     private void refreshTodos() {
         todos.clear();
         todosAdapter.notifyDataSetChanged();
         requestTodos(todosList);
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == REQUEST_VIEW_TODO_CODE) {
-            if (resultCode == Activity.RESULT_OK) {
-                if (data != null) {
-                    if (data.getIntExtra("requestCode", 0) == 1
-                            || data.getIntExtra("requestCode", 0) == 2
-                            || data.getIntExtra("requestCode", 0) == 3) {
+    @SuppressLint("NotifyDataSetChanged")
+    ActivityResultLauncher<Intent> startActivityForResult = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+        if (result != null && result.getResultCode() == RESULT_OK) {
+            if (result.getData() != null) {
+                if (result.getData().getIntExtra("request", 0) == RequestCodes.REQUEST_VIEW_TODO_CODE) {
+                    if (result.getData().getIntExtra("request", 0) == 1
+                            || result.getData().getIntExtra("request", 0) == 2
+                            || result.getData().getIntExtra("request", 0) == 3) {
                         refreshTodos();
                         is_updated = true;
                     }
                 }
             }
         }
-    }
+    });
 
     private void setResult() {
         Intent intent = new Intent();

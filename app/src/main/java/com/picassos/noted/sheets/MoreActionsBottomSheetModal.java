@@ -23,7 +23,6 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -37,6 +36,7 @@ import com.picassos.noted.entities.ArchiveNote;
 import com.picassos.noted.entities.Note;
 import com.picassos.noted.entities.TrashNote;
 import com.picassos.noted.sharedPreferences.SharedPref;
+import com.picassos.noted.utils.Toasto;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -126,16 +126,16 @@ public class MoreActionsBottomSheetModal extends BottomSheetDialogFragment {
                 if (note != null) {
                     if (note.isNote_locked()) {
                         // set password and lock note
-                        Toast.makeText(getContext(), getString(R.string.note_unlocked), Toast.LENGTH_SHORT).show();
+                        Toasto.show_toast(requireContext(), getString(R.string.note_unlocked), 0, 0);
                         onLockListener.onLockListener(REQUEST_UNLOCK_NOTE_CODE);
                     } else {
                         // set password and lock note
-                        Toast.makeText(getContext(), getString(R.string.note_locked), Toast.LENGTH_SHORT).show();
+                        Toasto.show_toast(requireContext(), getString(R.string.note_locked), 0, 0);
                         onLockListener.onLockListener(REQUEST_LOCK_NOTE_CODE);
                     }
                     dismiss();
                 } else {
-                    Toast.makeText(getContext(), getString(R.string.save_note_before_lock), Toast.LENGTH_SHORT).show();
+                    Toasto.show_toast(requireContext(), getString(R.string.save_note_before_lock), 1, 2);
                 }
             }
         });
@@ -159,7 +159,7 @@ public class MoreActionsBottomSheetModal extends BottomSheetDialogFragment {
                 share.putExtra(Intent.EXTRA_TEXT, note.getNote_description());
                 startActivity(Intent.createChooser(share, getString(R.string.share_note)));
             } else {
-                Toast.makeText(getContext(), getString(R.string.save_note_before_share), Toast.LENGTH_SHORT).show();
+                Toasto.show_toast(requireContext(), getString(R.string.save_note_before_share), 1, 2);
             }
         });
 
@@ -169,7 +169,7 @@ public class MoreActionsBottomSheetModal extends BottomSheetDialogFragment {
             if (note != null) {
                 requestArchiveNote();
             } else {
-                Toast.makeText(getContext(), getString(R.string.save_note_before_archive), Toast.LENGTH_SHORT).show();
+                Toasto.show_toast(requireContext(), getString(R.string.save_note_before_archive), 1, 2);
             }
         });
 
@@ -179,7 +179,7 @@ public class MoreActionsBottomSheetModal extends BottomSheetDialogFragment {
             if (note != null) {
                 showReaderModeDialog();
             } else {
-                Toast.makeText(getContext(), getString(R.string.save_note_before_open_reader_mode), Toast.LENGTH_SHORT).show();
+                Toasto.show_toast(requireContext(), getString(R.string.save_note_before_open_reader_mode), 1, 2);
             }
         });
 
@@ -197,11 +197,11 @@ public class MoreActionsBottomSheetModal extends BottomSheetDialogFragment {
                 ClipboardManager clipboard = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
                 ClipData data = ClipData.newPlainText("Copy Note", note_text);
                 clipboard.setPrimaryClip(data);
-                Toast.makeText(getContext(), getString(R.string.copied_to_clipboard), Toast.LENGTH_SHORT).show();
+                Toasto.show_toast(requireContext(), getString(R.string.copied_to_clipboard), 0, 0);
                 // dismiss bottom sheet
                 dismiss();
             } else {
-                Toast.makeText(getContext(), getString(R.string.save_note_before_copy), Toast.LENGTH_SHORT).show();
+                Toasto.show_toast(requireContext(), getString(R.string.save_note_before_copy), 1, 2);
             }
         });
 
@@ -211,7 +211,7 @@ public class MoreActionsBottomSheetModal extends BottomSheetDialogFragment {
             if (note != null) {
                 showExportAsDialog();
             } else {
-                Toast.makeText(getContext(), getString(R.string.save_note_before_export), Toast.LENGTH_SHORT).show();
+                Toasto.show_toast(requireContext(), getString(R.string.save_note_before_export), 1, 2);
             }
         });
 
@@ -227,10 +227,10 @@ public class MoreActionsBottomSheetModal extends BottomSheetDialogFragment {
                 try {
                     startActivityForResult(intent, REQUEST_CODE_TEXT_TO_SPEECH);
                 } catch (Exception e) {
-                    Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toasto.show_toast(requireContext(), e.getMessage(), 1, 0);
                 }
             } else {
-                Toast.makeText(getContext(), getString(R.string.save_note_before_speech), Toast.LENGTH_SHORT).show();
+                Toasto.show_toast(requireContext(), getString(R.string.save_note_before_speech), 1, 2);
             }
         });
 
@@ -273,7 +273,7 @@ public class MoreActionsBottomSheetModal extends BottomSheetDialogFragment {
                 @Override
                 protected void onPostExecute(Void aVoid) {
                     super.onPostExecute(aVoid);
-                    Toast.makeText(getContext(), getString(R.string.note_archived), Toast.LENGTH_SHORT).show();
+                    Toasto.show_toast(requireContext(), getString(R.string.note_archived), 1, 0);
                     dismiss();
                 }
             }
@@ -304,7 +304,7 @@ public class MoreActionsBottomSheetModal extends BottomSheetDialogFragment {
             requestMoveNoteToTrash(presetTrashNote);
         } else {
             onDeleteListener.onDeleteListener(REQUEST_DISCARD_NOTE_CODE);
-            Toast.makeText(getContext(), getString(R.string.note_discarded), Toast.LENGTH_SHORT).show();
+            Toasto.show_toast(requireContext(), getString(R.string.note_discarded), 1, 0);
             dismiss();
         }
     }
@@ -474,7 +474,7 @@ public class MoreActionsBottomSheetModal extends BottomSheetDialogFragment {
             FileOutputStream fos = new FileOutputStream(file);
             fos.write(note_text.getBytes());
             fos.close();
-            Toast.makeText(getContext(), getString(R.string.saved_to) + Environment.getExternalStorageDirectory() + "/" + requireContext().getPackageName() + "/" + FILE_NAME, Toast.LENGTH_SHORT).show();
+            Toasto.show_toast(requireContext(), getString(R.string.saved_to) + Environment.getExternalStorageDirectory() + "/" + requireContext().getPackageName() + "/" + FILE_NAME, 1, 0);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -504,9 +504,9 @@ public class MoreActionsBottomSheetModal extends BottomSheetDialogFragment {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == 1000) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(getContext(), getString(R.string.permission_granted), Toast.LENGTH_SHORT).show();
+                Toasto.show_toast(requireContext(), getString(R.string.permission_granted), 1, 0);
             } else {
-                Toast.makeText(getContext(), getString(R.string.permission_denied), Toast.LENGTH_SHORT).show();
+                Toasto.show_toast(requireContext(), getString(R.string.permission_denied), 1, 1);
             }
         }
     }

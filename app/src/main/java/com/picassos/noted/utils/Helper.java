@@ -1,5 +1,6 @@
 package com.picassos.noted.utils;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageInfo;
@@ -93,7 +94,7 @@ public class Helper {
      * @return formatted date
      */
     public static String get_formatted_date(Long date_time) {
-        SimpleDateFormat newFormat = new SimpleDateFormat("dd MMM yy hh:mm");
+        @SuppressLint("SimpleDateFormat") SimpleDateFormat newFormat = new SimpleDateFormat("dd MMM yy hh:mm");
         return newFormat.format(new Date(date_time));
     }
 

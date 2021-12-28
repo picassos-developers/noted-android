@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -24,6 +23,7 @@ import com.picassos.noted.sharedPreferences.SharedPref;
 import com.picassos.noted.sheets.ArchiveNoteActionsBottomSheetModal;
 import com.picassos.noted.sheets.ArchivedNoteViewBottomSheetModal;
 import com.picassos.noted.sheets.PasswordBottomSheetModal;
+import com.picassos.noted.utils.Toasto;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -140,7 +140,7 @@ public class ArchiveFragment extends Fragment implements ArchiveNotesListener {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == ArchiveNoteActionsBottomSheetModal.REQUEST_UNARCHIVE_NOTE) {
             request_archive_notes();
-            Toast.makeText(getContext(), getString(R.string.note_restored_from_archive), Toast.LENGTH_SHORT).show();
+            Toasto.show_toast(requireContext(), getString(R.string.note_restored_from_archive), 1, 0);
         } else if (requestCode == REQUEST_CODE_UNLOCK_NOTE) {
             ArchivedNoteViewBottomSheetModal archivedNoteViewBottomSheetModal = new ArchivedNoteViewBottomSheetModal();
             archivedNoteViewBottomSheetModal.setArguments(bundle);

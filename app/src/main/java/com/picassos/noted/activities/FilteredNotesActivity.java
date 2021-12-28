@@ -1,6 +1,7 @@
 package com.picassos.noted.activities;
 
-import androidx.annotation.Nullable;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -16,16 +17,17 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.picassos.noted.R;
 import com.picassos.noted.adapters.NotesTypeListAdapter;
+import com.picassos.noted.constants.RequestCodes;
 import com.picassos.noted.databases.APP_DATABASE;
 import com.picassos.noted.entities.Note;
 import com.picassos.noted.listeners.NotesListener;
 import com.picassos.noted.sharedPreferences.SharedPref;
 import com.picassos.noted.sheets.ImplementedPasswordBottomSheetModal;
 import com.picassos.noted.utils.Helper;
+import com.picassos.noted.utils.Toasto;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,12 +37,6 @@ public class FilteredNotesActivity extends AppCompatActivity implements NotesLis
 
     Bundle bundle;
     SharedPref sharedPref;
-
-    // REQUEST CODES
-    private final int REQUEST_CODE_ADD_NOTE_OK = 1;
-    private final int REQUEST_CODE_UPDATE_NOTE_OK = 2;
-    private final int REQUEST_CODE_VIEW_NOTE_OK = 3;
-    private final int REQUEST_CODE_TEXT_TO_SPEECH = 4;
 
     private RecyclerView notesRecyclerview;
 
@@ -67,9 +63,8 @@ public class FilteredNotesActivity extends AppCompatActivity implements NotesLis
         // Bundle
         bundle = new Bundle();
 
-        // return back and finish activity
-        ImageView goBack = findViewById(R.id.go_back);
-        goBack.setOnClickListener(v -> finish());
+        // finish activity
+        findViewById(R.id.go_back).setOnClickListener(v -> finish());
 
         // category title
         TextView categoryTitle = findViewById(R.id.category_title);
@@ -83,14 +78,15 @@ public class FilteredNotesActivity extends AppCompatActivity implements NotesLis
         ImageView searchMic = findViewById(R.id.search_mic);
         searchMic.setOnClickListener(v -> {
             Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+            intent.putExtra("request", RequestCodes.REQUEST_CODE_TEXT_TO_SPEECH);
             intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
             intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
             intent.putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.speak_notes));
 
             try {
-                startActivityForResult(intent, REQUEST_CODE_TEXT_TO_SPEECH);
+                startActivityForResult.launch(intent);
             } catch (Exception e) {
-                Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                Toasto.show_toast(this, e.getMessage(), 1, 1);
             }
         });
 
@@ -103,8 +99,7 @@ public class FilteredNotesActivity extends AppCompatActivity implements NotesLis
         notesAdapter = new NotesTypeListAdapter(notes, this);
         notesRecyclerview.setAdapter(notesAdapter);
 
-        requestNotes(REQUEST_CODE_VIEW_NOTE_OK, false, getIntent().getIntExtra("identifier", 0));
-
+        requestNotes(RequestCodes.REQUEST_CODE_VIEW_NOTE_OK, false, getIntent().getIntExtra("identifier", 0));
     }
 
     /**
@@ -121,17 +116,18 @@ public class FilteredNotesActivity extends AppCompatActivity implements NotesLis
                 return APP_DATABASE.requestDatabase(getApplicationContext()).dao().request_notes_by_category(identifier);
             }
 
+            @SuppressLint("NotifyDataSetChanged")
             @Override
             protected void onPostExecute(List<Note> notes_inline) {
                 super.onPostExecute(notes_inline);
-                if (requestCode == REQUEST_CODE_VIEW_NOTE_OK) {
+                if (requestCode == RequestCodes.REQUEST_CODE_VIEW_NOTE_OK) {
                     notes.addAll(notes_inline);
                     notesAdapter.notifyDataSetChanged();
-                } else if (requestCode == REQUEST_CODE_ADD_NOTE_OK) {
+                } else if (requestCode == RequestCodes.REQUEST_CODE_ADD_NOTE_OK) {
                     notes.add(0, notes_inline.get(0));
                     notesAdapter.notifyItemInserted(0);
                     notesRecyclerview.smoothScrollToPosition(0);
-                } else if (requestCode == REQUEST_CODE_UPDATE_NOTE_OK) {
+                } else if (requestCode == RequestCodes.REQUEST_CODE_UPDATE_NOTE_OK) {
                     notes.remove(noteClickedPosition);
                     if (isDeleted) {
                         notesAdapter.notifyItemRemoved(noteClickedPosition);
@@ -184,7 +180,7 @@ public class FilteredNotesActivity extends AppCompatActivity implements NotesLis
             Intent intent = new Intent(FilteredNotesActivity.this, AddNoteActivity.class);
             intent.putExtra("modifier", true);
             intent.putExtra("note", note);
-            startActivityForResult(intent, REQUEST_CODE_UPDATE_NOTE_OK);
+            startActivityForResult.launch(intent);
         } else {
             if (note.isNote_locked()) {
                 bundle.putSerializable("data", note);
@@ -196,7 +192,7 @@ public class FilteredNotesActivity extends AppCompatActivity implements NotesLis
                 Intent intent = new Intent(FilteredNotesActivity.this, AddNoteActivity.class);
                 intent.putExtra("modifier", true);
                 intent.putExtra("note", note);
-                startActivityForResult(intent, REQUEST_CODE_UPDATE_NOTE_OK);
+                startActivityForResult.launch(intent);
             }
         }
     }
@@ -207,30 +203,31 @@ public class FilteredNotesActivity extends AppCompatActivity implements NotesLis
     }
 
     @Override
-    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == REQUEST_CODE_ADD_NOTE_OK && resultCode == RESULT_OK) {
-            requestNotes(REQUEST_CODE_ADD_NOTE_OK, false, getIntent().getIntExtra("identifier", 0));
-        } else if (requestCode == REQUEST_CODE_UPDATE_NOTE_OK && resultCode == RESULT_OK) {
-            if (data != null) {
-                requestNotes(REQUEST_CODE_UPDATE_NOTE_OK, data.getBooleanExtra("is_note_removed", false), getIntent().getIntExtra("identifier", 0));
-            }
-        } else if (requestCode == REQUEST_CODE_TEXT_TO_SPEECH) {
-            if (resultCode == RESULT_OK && null != data) {
-                ArrayList<String> result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                if (result != null) {
-                    searchBar.setText(result.get(0));
-                }
-            }
-        }
-    }
-
-    @Override
     public void onUnlockListener(Note note) {
         Intent intent = new Intent(FilteredNotesActivity.this, AddNoteActivity.class);
         intent.putExtra("modifier", true);
         intent.putExtra("note", note);
-        startActivityForResult(intent, REQUEST_CODE_UPDATE_NOTE_OK);
+        startActivityForResult.launch(intent);
     }
+
+    ActivityResultLauncher<Intent> startActivityForResult = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+        if (result != null && result.getResultCode() == RESULT_OK) {
+            if (result.getData() != null) {
+                switch (result.getData().getIntExtra("request", 0)) {
+                    case RequestCodes.REQUEST_CODE_TEXT_TO_SPEECH:
+                        ArrayList<String> callback = result.getData().getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                        if (callback != null) {
+                            searchBar.setText(callback.get(0));
+                        }
+                        break;
+                    case RequestCodes.REQUEST_CODE_ADD_NOTE_OK:
+                        requestNotes(RequestCodes.REQUEST_CODE_ADD_NOTE_OK, false, getIntent().getIntExtra("identifier", 0));
+                        break;
+                    case RequestCodes.REQUEST_CODE_UPDATE_NOTE_OK:
+                        requestNotes(RequestCodes.REQUEST_CODE_UPDATE_NOTE_OK, result.getData().getBooleanExtra("is_note_removed", false), getIntent().getIntExtra("identifier", 0));
+                        break;
+                }
+            }
+        }
+    });
 }

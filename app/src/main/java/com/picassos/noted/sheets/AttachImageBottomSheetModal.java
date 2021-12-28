@@ -16,7 +16,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -26,6 +25,7 @@ import androidx.core.content.FileProvider;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.picassos.noted.R;
+import com.picassos.noted.utils.Toasto;
 
 import java.io.File;
 import java.io.IOException;
@@ -170,7 +170,7 @@ public class AttachImageBottomSheetModal extends BottomSheetDialogFragment {
             try {
                 file = createImageFile();
             } catch (IOException e) {
-                Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                Toasto.show_toast(requireContext(), e.getMessage(), 1, 1);
             }
 
             if (file != null) {
@@ -183,7 +183,7 @@ public class AttachImageBottomSheetModal extends BottomSheetDialogFragment {
                     intent.putExtra("return_data", true);
                     startActivityForResult(intent, REQUEST_CAMERA_IMAGE_CODE);
                 } catch (ActivityNotFoundException e) {
-                    Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toasto.show_toast(requireContext(), e.getMessage(), 1, 1);
                 }
             }
         }
@@ -219,13 +219,13 @@ public class AttachImageBottomSheetModal extends BottomSheetDialogFragment {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 requestSelectImage();
             } else {
-                Toast.makeText(getContext(), getString(R.string.permission_denied), Toast.LENGTH_SHORT).show();
+                Toasto.show_toast(requireContext(), getString(R.string.permission_denied), 1, 1);
             }
         } else if (requestCode == REQUEST_CAMERA_PERMISSION_CODE && grantResults.length > 0) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 requestCaptureImage();
             } else {
-                Toast.makeText(getContext(), getString(R.string.permission_denied), Toast.LENGTH_SHORT).show();
+                Toasto.show_toast(requireContext(), getString(R.string.permission_denied), 1, 1);
             }
         } else if (requestCode == 100) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -250,7 +250,7 @@ public class AttachImageBottomSheetModal extends BottomSheetDialogFragment {
                         onChooseImageListener.onChooseImageListener(REQUEST_SELECT_IMAGE_FROM_GALLERY_CODE, bitmap, selected_image_uri);
                         dismiss();
                     } catch (Exception exception) {
-                        Toast.makeText(getContext(), exception.getMessage(), Toast.LENGTH_SHORT).show();
+                        Toasto.show_toast(requireContext(), exception.getMessage(), 1, 1);
                     }
                 }
             }
@@ -266,7 +266,7 @@ public class AttachImageBottomSheetModal extends BottomSheetDialogFragment {
                         onChooseImageListener.onChooseImageListener(REQUEST_CAMERA_IMAGE_CODE, bitmap, selected_image_uri);
                         dismiss();
                     } catch (Exception exception) {
-                        Toast.makeText(getContext(), exception.getMessage(), Toast.LENGTH_SHORT).show();
+                        Toasto.show_toast(requireContext(), exception.getMessage(), 1, 1);
                     }
                 }
             }

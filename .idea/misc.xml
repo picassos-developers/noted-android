@@ -3,7 +3,20 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="app/src/main/res/drawable/toast_alert.xml" value="0.26927083333333335" />
+        <entry key="app/src/main/res/drawable/toast_dark.xml" value="0.26927083333333335" />
+        <entry key="app/src/main/res/drawable/toast_warning.xml" value="0.26927083333333335" />
+        <entry key="app/src/main/res/drawable/toolbar_background.xml" value="0.26927083333333335" />
+        <entry key="app/src/main/res/layout/activity_about.xml" value="0.33" />
+        <entry key="app/src/main/res/layout/activity_add_note.xml" value="0.33" />
+        <entry key="app/src/main/res/layout/activity_create_pin.xml" value="0.33" />
+        <entry key="app/src/main/res/layout/activity_edit_category.xml" value="0.253125" />
+        <entry key="app/src/main/res/layout/activity_filtered_notes.xml" value="0.253125" />
+        <entry key="app/src/main/res/layout/activity_main.xml" value="0.253125" />
         <entry key="app/src/main/res/layout/activity_view_attached_video.xml" value="0.253125" />
+        <entry key="app/src/main/res/layout/toast_layout_alert.xml" value="0.253125" />
+        <entry key="app/src/main/res/layout/toast_layout_primary.xml" value="0.253125" />
+        <entry key="app/src/main/res/layout/toast_layout_warning.xml" value="0.253125" />
       </map>
     </option>
   </component>

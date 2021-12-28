@@ -11,15 +11,14 @@ import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.picassos.noted.R;
 import com.picassos.noted.sharedPreferences.SharedPref;
 import com.picassos.noted.utils.Helper;
+import com.picassos.noted.utils.Toasto;
 
 public class CreatePinActivity extends AppCompatActivity {
 
@@ -42,9 +41,8 @@ public class CreatePinActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_create_pin);
 
-        // return back and finish activity
-        ImageView goBack = findViewById(R.id.go_back);
-        goBack.setOnClickListener(v -> finish());
+        // finish activity
+        findViewById(R.id.go_back).setOnClickListener(v -> finish());
 
         // pin code
         pinCode = findViewById(R.id.pin_code);
@@ -62,12 +60,12 @@ public class CreatePinActivity extends AppCompatActivity {
         pinCodeAction.setOnClickListener(v -> {
             if (!TextUtils.isEmpty(pinCode.getText().toString())) {
                 sharedPref.setNotePinCode(Integer.parseInt(pinCode.getText().toString()));
-                Toast.makeText(this, getString(R.string.pin_code_set), Toast.LENGTH_SHORT).show();
+                Toasto.show_toast(this, getString(R.string.pin_code_set), 0, 0);
                 Intent intent = new Intent();
                 intent.putExtra("result", "lock");
                 setResult(Activity.RESULT_OK, intent);
             } else {
-                Toast.makeText(this, getString(R.string.pin_code_empty), Toast.LENGTH_SHORT).show();
+                Toasto.show_toast(this, getString(R.string.pin_code_empty), 0, 2);
             }
             finish();
         });

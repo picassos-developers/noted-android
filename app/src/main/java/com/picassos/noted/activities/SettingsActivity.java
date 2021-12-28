@@ -1,6 +1,5 @@
 package com.picassos.noted.activities;
 
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.biometric.BiometricManager;
@@ -11,13 +10,16 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.picassos.noted.R;
 import com.picassos.noted.constants.Constants;
+import com.picassos.noted.databases.APP_DATABASE;
 import com.picassos.noted.sharedPreferences.SharedPref;
 import com.picassos.noted.sheets.PinOptionsBottomSheetModal;
 import com.picassos.noted.utils.Helper;
+import com.picassos.noted.utils.Toasto;
+
+import de.raphaelebner.roomdatabasebackup.core.RoomBackup;
 
 public class SettingsActivity extends AppCompatActivity implements PinOptionsBottomSheetModal.OnRemoveListener {
 
@@ -35,6 +37,9 @@ public class SettingsActivity extends AppCompatActivity implements PinOptionsBot
         Helper.screen_state(this);
 
         setContentView(R.layout.activity_settings);
+
+        // initialize room backup
+        final RoomBackup roomBackup = new RoomBackup(SettingsActivity.this);
 
         // return back and finish activity
         ImageView go_back = findViewById(R.id.go_back);
@@ -118,7 +123,17 @@ public class SettingsActivity extends AppCompatActivity implements PinOptionsBot
         findViewById(R.id.pin_lock).setOnClickListener(v -> pinLock());
 
         // share app
-        findViewById(R.id.share_app).setOnClickListener(v -> shareApp());
+        findViewById(R.id.share_app).setOnClickListener(v -> {
+            roomBackup.database(APP_DATABASE.requestDatabase(this));
+            roomBackup.enableLogDebug(true);
+            roomBackup.backupIsEncrypted(false);
+            roomBackup.backupLocation(RoomBackup.BACKUP_FILE_LOCATION_EXTERNAL);
+            roomBackup.maxFileCount(5);
+            roomBackup.onCompleteListener((success, message) -> {
+                if (success) roomBackup.restartApp(new Intent(getApplicationContext(), SettingsActivity.class));
+            });
+            roomBackup.backup();
+        });
 
         // send feedback
         findViewById(R.id.send_feedback).setOnClickListener(v -> sendFeedback());
@@ -184,7 +199,7 @@ public class SettingsActivity extends AppCompatActivity implements PinOptionsBot
 
         } catch (android.content.ActivityNotFoundException ex) {
 
-            Toast.makeText(this, getString(R.string.gmail_not_installed), Toast.LENGTH_SHORT).show();
+            Toasto.show_toast(this, getString(R.string.gmail_not_installed), 1, 2);
 
         }
     }
@@ -235,14 +250,9 @@ public class SettingsActivity extends AppCompatActivity implements PinOptionsBot
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-    }
-
-    @Override
     public void onRemoveListener(int requestCode) {
         if (requestCode == PinOptionsBottomSheetModal.REQUEST_REMOVE_PIN_CODE) {
-            Toast.makeText(this, getString(R.string.pin_code_unset), Toast.LENGTH_SHORT).show();
+            Toasto.show_toast(this, getString(R.string.pin_code_unset), 1, 2);
         }
     }
 }

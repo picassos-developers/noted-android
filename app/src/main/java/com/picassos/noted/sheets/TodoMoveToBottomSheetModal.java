@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -20,6 +19,7 @@ import com.picassos.noted.adapters.TodoListAdapter;
 import com.picassos.noted.databases.APP_DATABASE;
 import com.picassos.noted.entities.TodosList;
 import com.picassos.noted.listeners.TodoListListener;
+import com.picassos.noted.utils.Toasto;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -103,7 +103,7 @@ public class TodoMoveToBottomSheetModal extends BottomSheetDialogFragment implem
     @Override
     public void onTodoListClicked(TodosList todosList, int position) {
         onMoveListener.onMoveListener(REQUEST_MOVE_TASK_CODE, todosList.getTodo_list_identifier());
-        Toast.makeText(getContext(), getString(R.string.todo_moved_to) + " " + todosList.getTodo_list_title(), Toast.LENGTH_SHORT).show();
+        Toasto.show_toast(requireContext(), getString(R.string.todo_moved_to) + " " + todosList.getTodo_list_title(), 0, 0);
         dismiss();
     }
 }

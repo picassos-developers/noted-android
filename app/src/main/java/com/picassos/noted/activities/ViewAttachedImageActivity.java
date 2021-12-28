@@ -11,6 +11,7 @@ import android.widget.Toast;
 
 import com.makeramen.roundedimageview.RoundedImageView;
 import com.picassos.noted.R;
+import com.picassos.noted.constants.RequestCodes;
 import com.picassos.noted.utils.Helper;
 
 public class ViewAttachedImageActivity extends AppCompatActivity {
@@ -41,7 +42,7 @@ public class ViewAttachedImageActivity extends AppCompatActivity {
         findViewById(R.id.note_image_remove).setOnClickListener(v -> {
             if (getIntent().getStringExtra("image_type") == null) {
                 Intent intent = new Intent();
-                intent.putExtra("request", "remove_image");
+                intent.putExtra("request", RequestCodes.REQUEST_REMOVE_NOTE_IMAGE_CODE);
                 setResult(Activity.RESULT_OK, intent);
             }
             finish();

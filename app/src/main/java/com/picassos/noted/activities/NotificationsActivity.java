@@ -35,7 +35,7 @@ public class NotificationsActivity extends AppCompatActivity implements Notifica
 
     private DAO dao;
 
-    @SuppressLint("SetTextI18n")
+    @SuppressLint({"SetTextI18n", "NotifyDataSetChanged"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -88,6 +88,7 @@ public class NotificationsActivity extends AppCompatActivity implements Notifica
                 return APP_DATABASE.requestDatabase(getApplicationContext()).dao().requestAllNotifications();
             }
 
+            @SuppressLint("NotifyDataSetChanged")
             @Override
             protected void onPostExecute(List<Notification> notifications_inline) {
                 super.onPostExecute(notifications_inline);
@@ -105,6 +106,7 @@ public class NotificationsActivity extends AppCompatActivity implements Notifica
         new GetNotificationsTask().execute();
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     @Override
     public void onNotificationClicked(Notification notification, int position) {
         Dialog previewNotification = new Dialog(this);

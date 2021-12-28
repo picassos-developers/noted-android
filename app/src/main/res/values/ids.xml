@@ -9,6 +9,8 @@
     <item name="remove_reminder" type="id" />
     <item name="restore_note" type="id" />
     <item name="delete_note" type="id" />
+    <item name="custom_toast" type="id" />
+    <item name="toast_text" type="id" />
     <item name="speech_to_text" type="id" />
     <item name="share_note" type="id" />
     <item name="export_note_as" type="id" />

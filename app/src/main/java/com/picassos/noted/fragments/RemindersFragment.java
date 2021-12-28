@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -24,6 +23,7 @@ import com.picassos.noted.listeners.NotesListener;
 import com.picassos.noted.sharedPreferences.SharedPref;
 import com.picassos.noted.sheets.NoteActionsBottomSheetModal;
 import com.picassos.noted.sheets.PasswordBottomSheetModal;
+import com.picassos.noted.utils.Toasto;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -175,7 +175,7 @@ public class RemindersFragment extends Fragment implements NotesListener {
             }
         } else if (requestCode == NoteActionsBottomSheetModal.REQUEST_DELETE_NOTE_CODE) {
             requestReminderNotes(REQUEST_CODE_UPDATE_NOTE_OK, true);
-            Toast.makeText(getContext(), getString(R.string.note_moved_to_trash), Toast.LENGTH_SHORT).show();
+            Toasto.show_toast(requireContext(), getString(R.string.note_moved_to_trash), 1, 0);
         } else if (requestCode == REQUEST_CODE_UNLOCK_NOTE) {
             if (data != null) {
                 Note note = (Note) data.getSerializableExtra("data");

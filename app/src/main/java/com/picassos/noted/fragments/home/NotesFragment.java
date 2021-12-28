@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,6 +36,7 @@ import com.picassos.noted.sharedPreferences.SharedPref;
 import com.picassos.noted.sheets.HomeMoreOptionsBottomSheetModal;
 import com.picassos.noted.sheets.NoteActionsBottomSheetModal;
 import com.picassos.noted.sheets.PasswordBottomSheetModal;
+import com.picassos.noted.utils.Toasto;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -102,8 +102,7 @@ public class NotesFragment extends Fragment implements NotesListener,
         // fab, add notes
         CardView addNote = view.findViewById(R.id.add_note);
         addNote.setOnClickListener(v -> {
-            //startActivityForResult(new Intent(getContext(), AddNoteActivity.class), REQUEST_CODE_ADD_NOTE_OK);
-
+            startActivityForResult(new Intent(getContext(), AddNoteActivity.class), REQUEST_CODE_ADD_NOTE_OK);
         });
 
         // categories recyclerview
@@ -212,9 +211,9 @@ public class NotesFragment extends Fragment implements NotesListener,
             }
         } else if (requestCode == NoteActionsBottomSheetModal.REQUEST_DELETE_NOTE_CODE) {
             requestNotes(REQUEST_CODE_UPDATE_NOTE_OK, "note_id", true);
-            Toast.makeText(getContext(), getString(R.string.note_moved_to_trash), Toast.LENGTH_SHORT).show();
+            Toasto.show_toast(requireContext(), getString(R.string.note_moved_to_trash), 1, 0);
         } else if (requestCode == NoteActionsBottomSheetModal.REQUEST_DISCARD_NOTE_CODE) {
-            Toast.makeText(getContext(), getString(R.string.note_discarded), Toast.LENGTH_SHORT).show();
+            Toasto.show_toast(requireContext(), getString(R.string.note_discarded), 1, 0);
         } else if (resultCode == HomeMoreOptionsBottomSheetModal.CHOOSE_OPTION_REQUEST_CODE) {
             initializeToolbarSelector();
         } else if (resultCode == HomeMoreOptionsBottomSheetModal.CHOOSE_SORT_BY_A_TO_Z) {

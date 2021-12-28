@@ -37,6 +37,7 @@ import com.google.android.exoplayer2.upstream.DataSpec;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.FileDataSource;
 import com.picassos.noted.R;
+import com.picassos.noted.constants.RequestCodes;
 import com.picassos.noted.utils.Helper;
 
 import java.util.Objects;
@@ -197,7 +198,7 @@ public class ViewAttachedVideoActivity extends AppCompatActivity {
         findViewById(R.id.note_video_remove).setOnClickListener(v -> {
             if (getIntent().getStringExtra("video_type") == null) {
                 Intent intent = new Intent();
-                intent.putExtra("request", "remove_video");
+                intent.putExtra("request", RequestCodes.REQUEST_REMOVE_NOTE_VIDEO_CODE);
                 setResult(Activity.RESULT_OK, intent);
             }
             finish();

@@ -15,6 +15,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+
 import com.picassos.noted.R;
 import com.picassos.noted.constants.Constants;
 import com.picassos.noted.databases.APP_DATABASE;
@@ -43,7 +44,7 @@ public class SettingsActivity extends AppCompatActivity implements PinOptionsBot
         setContentView(R.layout.activity_settings);
 
         // initialize room backup
-        final RoomBackup roomBackup = new RoomBackup(SettingsActivity.this);
+        final RoomBackup backupDatabase = new RoomBackup(SettingsActivity.this);
 
         // return back and finish activity
         ImageView go_back = findViewById(R.id.go_back);
@@ -139,20 +140,34 @@ public class SettingsActivity extends AppCompatActivity implements PinOptionsBot
 
         // backup notes
         findViewById(R.id.backup_notes).setOnClickListener(v -> {
-            roomBackup.database(APP_DATABASE.requestDatabase(this));
-            roomBackup.enableLogDebug(true);
-            roomBackup.backupIsEncrypted(false);
-            roomBackup.backupLocation(RoomBackup.BACKUP_FILE_LOCATION_EXTERNAL);
-            roomBackup.maxFileCount(5);
-            roomBackup.onCompleteListener((success, message) -> {
-                if (success) roomBackup.restartApp(new Intent(getApplicationContext(), SettingsActivity.class));
-            });
-            roomBackup.backup();
+            backupDatabase.database(APP_DATABASE.requestDatabase(this))
+                    .enableLogDebug(true)
+                    .backupIsEncrypted(false)
+                    .backupLocation(RoomBackup.BACKUP_FILE_LOCATION_INTERNAL)
+                    .maxFileCount(5)
+                    .customBackupFileName("database.sqlite3")
+                    .onCompleteListener((success, message) -> {
+                        Toasto.show_toast(this, message, 1, 0);
+                    }).backup();
         });
+
+
 
         // restore notes
         findViewById(R.id.restore_notes).setOnClickListener(v -> {
-
+            backupDatabase.database(APP_DATABASE.requestDatabase(this))
+                    .enableLogDebug(true)
+                    .backupIsEncrypted(false)
+                    .customBackupFileName("database.sqlite3")
+                    .backupLocation(RoomBackup.BACKUP_FILE_LOCATION_INTERNAL)
+                    .onCompleteListener((success, message) -> {
+                        if (success) {
+                            startActivity(new Intent(SettingsActivity.this, MainActivity.class));
+                            finishAffinity();
+                        } else {
+                            finish();
+                        }
+                    }).restore();
         });
 
         // send feedback

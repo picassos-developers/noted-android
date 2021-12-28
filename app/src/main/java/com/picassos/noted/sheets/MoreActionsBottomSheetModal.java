@@ -27,6 +27,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.cardview.widget.CardView;
+import androidx.core.app.ActivityCompat;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.picassos.noted.R;
@@ -416,9 +417,8 @@ public class MoreActionsBottomSheetModal extends BottomSheetDialogFragment {
      * show export note as dialog
      */
     private void showExportAsDialog() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && getContext().checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1000);
+        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(requireActivity(), new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);
         }
 
         Dialog exportNoteDialog = new Dialog(requireContext());
@@ -463,11 +463,15 @@ public class MoreActionsBottomSheetModal extends BottomSheetDialogFragment {
         // format note
         String note_text = "Note title: " + note.getNote_title() + "\n\nNote subtitle: " + note.getNote_subtitle() + "\n\nNote description: " + note.getNote_description();
         // create directory
-        File dir = new File(Environment.getExternalStorageDirectory() + "/" + getContext().getPackageName() + "/");
-        if (!dir.exists()) {
-            dir.mkdir();
+        File directory = new File(Environment.getExternalStorageDirectory(), "test");
+        if (directory.exists()) {
+            Toasto.show_toast(requireContext(), "already exists", 1, 0);
+        } else {
+            requireContext().getExternalFilesDir("test");
         }
-        // save file
+
+
+        /*// save file
         File file = new File(Environment.getExternalStorageDirectory() + "/" + requireContext().getPackageName() + "/",  FILE_NAME);
         // write to file
         try {
@@ -477,7 +481,7 @@ public class MoreActionsBottomSheetModal extends BottomSheetDialogFragment {
             Toasto.show_toast(requireContext(), getString(R.string.saved_to) + Environment.getExternalStorageDirectory() + "/" + requireContext().getPackageName() + "/" + FILE_NAME, 1, 0);
         } catch (IOException e) {
             e.printStackTrace();
-        }
+        }*/
     }
 
     @Override
@@ -499,6 +503,8 @@ public class MoreActionsBottomSheetModal extends BottomSheetDialogFragment {
             }
         }
     }
+
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {

@@ -1,2 +1,3 @@
 rootProject.name='Noted'
 include ':app'
+include ':core'

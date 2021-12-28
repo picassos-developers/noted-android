@@ -1,10 +1,12 @@
 package com.picassos.noted.activities;
 
+import static androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG;
+import static androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL;
+
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.biometric.BiometricManager;
 import androidx.biometric.BiometricPrompt;
 import androidx.core.content.ContextCompat;
 
@@ -12,6 +14,7 @@ import android.annotation.SuppressLint;
 import android.app.KeyguardManager;
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -139,32 +142,6 @@ public class SplashActivity extends AppCompatActivity {
     }
 
     private void requestBiometricInstance() {
-        BiometricManager biometricManager = BiometricManager.from(this);
-        // check if can authenticate
-        switch (biometricManager.canAuthenticate()) {
-            case BiometricManager.BIOMETRIC_SUCCESS:
-                Log.e("Fingerprint", "BIOMETRIC_SUCCESS");
-                break;
-            case BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE:
-                Log.e("Fingerprint", "BIOMETRIC_ERROR_NO_HARDWARE");
-                break;
-            case BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE:
-                Log.e("Fingerprint", "BIOMETRIC_ERROR_HW_UNAVAILABLE");
-                break;
-            case BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED:
-                Log.e("Fingerprint", "BIOMETRIC_ERROR_NONE_ENROLLED");
-                break;
-            case BiometricManager.BIOMETRIC_ERROR_SECURITY_UPDATE_REQUIRED:
-                Log.e("Fingerprint", "BIOMETRIC_ERROR_SECURITY_UPDATE_REQUIRED");
-                break;
-            case BiometricManager.BIOMETRIC_ERROR_UNSUPPORTED:
-                Log.e("Fingerprint", "BIOMETRIC_ERROR_UNSUPPORTED");
-                break;
-            case BiometricManager.BIOMETRIC_STATUS_UNKNOWN:
-                Log.e("Fingerprint", "BIOMETRIC_STATUS_UNKNOWN");
-                break;
-        }
-
         // create a new executor
         Executor executor = ContextCompat.getMainExecutor(this);
 
@@ -199,15 +176,25 @@ public class SplashActivity extends AppCompatActivity {
             @Override
             public void onAuthenticationFailed() {
                 super.onAuthenticationFailed();
-                Toasto.show_toast(getApplicationContext(), "Failed", 1, 2);
+                Toasto.show_toast(getApplicationContext(), getString(R.string.failed_to_authenticate_fingerprint), 1, 2);
             }
         });
 
-        BiometricPrompt.PromptInfo promptInfo = new BiometricPrompt.PromptInfo.Builder()
-                .setTitle("Confirm fingerprint to continue")
-                .setNegativeButtonText("Cancel")
-                .setConfirmationRequired(true)
-                .build();
+        BiometricPrompt.PromptInfo promptInfo;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            promptInfo = new BiometricPrompt.PromptInfo.Builder()
+                    .setTitle("Confirm fingerprint to continue")
+                    .setAllowedAuthenticators(BIOMETRIC_STRONG | DEVICE_CREDENTIAL)
+                    .setConfirmationRequired(true)
+                    .build();
+        } else {
+            promptInfo = new BiometricPrompt.PromptInfo.Builder()
+                    .setTitle("Confirm fingerprint to continue")
+                    .setAllowedAuthenticators(BIOMETRIC_STRONG)
+                    .setNegativeButtonText("Cancel")
+                    .setConfirmationRequired(true)
+                    .build();
+        }
 
         biometricPrompt.authenticate(promptInfo);
     }

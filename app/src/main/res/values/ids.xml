@@ -170,6 +170,8 @@
     <item name="share_app" type="id" />
     <item name="send_feedback" type="id" />
     <item name="about_app" type="id" />
+    <item name="backup_notes" type="id" />
+    <item name="restore_notes" type="id" />
     <item name="app_version" type="id" />
     <item name="copyright_notice" type="id" />
     <item name="copy_to_clipboard" type="id" />

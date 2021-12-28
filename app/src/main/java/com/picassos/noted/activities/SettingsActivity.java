@@ -1,11 +1,15 @@
 package com.picassos.noted.activities;
 
+import static androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG;
+import static androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.biometric.BiometricManager;
 
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
@@ -96,8 +100,16 @@ public class SettingsActivity extends AppCompatActivity implements PinOptionsBot
         if (Constants.ENABLE_FINGERPRINT_LOGIN) {
             // check if fingerprint is supported
             BiometricManager biometricManager = BiometricManager.from(this);
+
+            int authenticators;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                authenticators = BIOMETRIC_STRONG | DEVICE_CREDENTIAL;
+            } else {
+                authenticators = BIOMETRIC_STRONG;
+            }
+
             // check if can authenticate
-            switch (biometricManager.canAuthenticate()) {
+            switch (biometricManager.canAuthenticate(authenticators)) {
                 case BiometricManager.BIOMETRIC_SUCCESS:
                     findViewById(R.id.login_with_fingerprint_container).setVisibility(View.VISIBLE);
                     break;
@@ -123,7 +135,10 @@ public class SettingsActivity extends AppCompatActivity implements PinOptionsBot
         findViewById(R.id.pin_lock).setOnClickListener(v -> pinLock());
 
         // share app
-        findViewById(R.id.share_app).setOnClickListener(v -> {
+        findViewById(R.id.share_app).setOnClickListener(v -> shareApp());
+
+        // backup notes
+        findViewById(R.id.backup_notes).setOnClickListener(v -> {
             roomBackup.database(APP_DATABASE.requestDatabase(this));
             roomBackup.enableLogDebug(true);
             roomBackup.backupIsEncrypted(false);
@@ -133,6 +148,11 @@ public class SettingsActivity extends AppCompatActivity implements PinOptionsBot
                 if (success) roomBackup.restartApp(new Intent(getApplicationContext(), SettingsActivity.class));
             });
             roomBackup.backup();
+        });
+
+        // restore notes
+        findViewById(R.id.restore_notes).setOnClickListener(v -> {
+
         });
 
         // send feedback

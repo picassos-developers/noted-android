@@ -166,4 +166,7 @@
     <string name="mark_as_important">Mark as Important</string>
     <string name="todo_moved_to">To-Do Moved to</string>
     <string name="there_are_no_todos_in_this_list">There is no to-dos in this list</string>
+    <string name="backup_notes">Backup Notes</string>
+    <string name="restore_notes">Restore Notes</string>
+    <string name="failed_to_authenticate_fingerprint">Failed to authenticate fingerprint</string>
 </resources>

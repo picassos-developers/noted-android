@@ -277,6 +277,62 @@
                 </LinearLayout>
 
                 <LinearLayout
+                    android:id="@id/backup_notes"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="10dp"
+                    tools:ignore="UseCompoundDrawables">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="10dp"
+                        android:src="@drawable/icon_backup_outline"
+                        app:tint="?color_dark"
+                        tools:ignore="ContentDescription" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/backup_notes"
+                        android:textColor="?color_dark"
+                        android:textSize="16sp" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@id/restore_notes"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="10dp"
+                    tools:ignore="UseCompoundDrawables">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="10dp"
+                        android:src="@drawable/icon_restore_outline"
+                        app:tint="?color_dark"
+                        tools:ignore="ContentDescription" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/restore_notes"
+                        android:textColor="?color_dark"
+                        android:textSize="16sp" />
+
+                </LinearLayout>
+
+                <LinearLayout
                     android:id="@id/send_feedback"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

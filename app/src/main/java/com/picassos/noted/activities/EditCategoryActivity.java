@@ -5,12 +5,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.annotation.SuppressLint;
-import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.widget.Button;
-import android.widget.ImageView;
 
 import com.picassos.noted.R;
 import com.picassos.noted.adapters.CategoriesAdapter;
@@ -29,7 +27,6 @@ public class EditCategoryActivity extends AppCompatActivity implements Categorie
 
     // bundle
     Bundle bundle;
-    Context context;
 
     private List<Category> categories;
     private CategoriesAdapter categoriesAdapter;
@@ -49,11 +46,9 @@ public class EditCategoryActivity extends AppCompatActivity implements Categorie
 
         // Bundle
         bundle = new Bundle();
-        context = getApplicationContext();
 
-        // return back and finish activity
-        ImageView goBack = findViewById(R.id.go_back);
-        goBack.setOnClickListener(v -> {
+        // finish activity
+        findViewById(R.id.go_back).setOnClickListener(v -> {
             startActivity(new Intent(EditCategoryActivity.this, MainActivity.class));
             finish();
         });
@@ -107,6 +102,7 @@ public class EditCategoryActivity extends AppCompatActivity implements Categorie
      * @param category for class
      */
     private void requestDeleteCategory(Category category) {
+        @SuppressLint("StaticFieldLeak")
         class DeleteCategoryTask extends AsyncTask<Void, Void, Void> {
             @Override
             protected Void doInBackground(Void... voids) {
@@ -120,7 +116,7 @@ public class EditCategoryActivity extends AppCompatActivity implements Categorie
                 categories.remove(categoryClickedPosition);
                 categoriesAdapter.notifyItemRemoved(categoryClickedPosition);
 
-                Toasto.show_toast(context, getString(R.string.category_deleted), 1, 0);
+                Toasto.show_toast(getApplicationContext(), getString(R.string.category_deleted), 1, 2);
             }
         }
 

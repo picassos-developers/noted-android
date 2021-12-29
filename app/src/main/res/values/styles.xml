@@ -34,12 +34,6 @@
         <item name="bottomSheetDialogTheme">@style/AppBottomSheetDialogTheme</item>
     </style>
 
-    <style name="MaterialTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
-        <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-    </style>
-
     <style name="DetailAnimation">
         <item name="android:windowEnterAnimation">@anim/up_down</item>
         <item name="android:windowExitAnimation">@anim/bottom_up</item>

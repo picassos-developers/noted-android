@@ -15,7 +15,6 @@
     <string name="cancel">Cancel</string>
     <string name="add_link">Attach Link</string>
     <string name="attached_links">Attached Links</string>
-    <string name="note_deleted">Note Deleted</string>
     <string name="delete">Delete Permanently</string>
     <string name="share">Share</string>
     <string name="share_app">Share App</string>
@@ -42,11 +41,9 @@
     <string name="category_added">Category Added</string>
     <string name="category_edited">Category Updated</string>
     <string name="category_is_selected">category is Selected</string>
-    <string name="all">All</string>
     <string name="choose_category">Choose Category</string>
     <string name="category">Category</string>
     <string name="save_note_before_share">Make sure to save the note before share</string>
-    <string name="new_category">New</string>
     <string name="attach_link">Add Attachment</string>
     <string name="attach_image">Attach Image</string>
     <string name="move_to_trash">Move to Trash</string>
@@ -78,18 +75,12 @@
     <string name="add_note">Add Note</string>
     <string name="reminder_set_successfully">Reminder Added. Save to Apply Changes.</string>
     <string name="note_title_subtitle_empty">Note title and note subtitle can\'t be empty</string>
-    <string name="note_saved">Note is saved successfully</string>
-    <string name="reminder_set_at">Reminder set at:</string>
     <string name="reminders">Reminders</string>
     <string name="add_reminder">Add Reminder</string>
     <string name="remove_reminder">Remove Reminder</string>
     <string name="reminder_removed">Reminder Removed</string>
-    <string name="failed_to_remove_reminder">Failed to remove reminder. Please contact support!</string>
     <string name="there_are_no_notes_in_reminder">There are no notes in reminders</string>
-    <string name="set_your_passcode">Set your passcode</string>
-    <string name="enter_four_digit_passcode">Enter 4-digit passcode</string>
     <string name="select">Select</string>
-    <string name="select_note_for_action">You need to select a note first to before making actions</string>
     <string name="selected">Selected</string>
     <string name="remove_image">Remove Image</string>
     <string name="remove_video">Remove Video</string>
@@ -102,7 +93,6 @@
     <string name="sort">Sort</string>
     <string name="sort_by">Sort By</string>
     <string name="name_a_z">Name A - Z</string>
-    <string name="popup_ok">OK</string>
     <string name="name_z_a">Name Z - A</string>
     <string name="sort_by_default">Sort by Default</string>
     <string name="take_a_photo">Take a photo</string>
@@ -134,7 +124,6 @@
     <string name="export_note_as">Export Note As</string>
     <string name="export_as_txt">Export as .txt file</string>
     <string name="export_as_csv">Export as .csv file</string>
-    <string name="saved_to">Saved to</string>
     <string name="speech_input">Speech Input</string>
     <string name="there_are_no_notifications_yet">There are no notifications yet</string>
     <string name="save_note_before_copy">Make sure to save note before copy</string>
@@ -145,8 +134,6 @@
     <string name="todos">To-dos</string>
     <string name="all_todos">All to-dos</string>
     <string name="todo_title">To-do</string>
-    <string name="uncompleted">Uncompleted</string>
-    <string name="completed">Completed</string>
     <string name="mark_completed">Mark Completed</string>
     <string name="mark_uncompleted">Mark Uncompleted</string>
     <string name="enter_title">Enter title</string>
@@ -156,8 +143,6 @@
     <string name="delete_all_completed_tasks">Delete all completed tasks</string>
     <string name="delete_all_completed_tasks_header">Delete all completed tasks?</string>
     <string name="delete_all_completed_tasks_description">completed tasks will be permanently deleted</string>
-    <string name="backup_data">Backup Data</string>
-    <string name="restore_data">Restore from Backup</string>
     <string name="create_new_list">Create new list</string>
     <string name="enter_list_title">Enter list title</string>
     <string name="todo_list_title_required">Todo list can\'t be empty</string>

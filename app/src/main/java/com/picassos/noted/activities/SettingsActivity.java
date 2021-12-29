@@ -148,6 +148,7 @@ public class SettingsActivity extends AppCompatActivity implements PinOptionsBot
                 .onCompleteListener((success, message) -> {
                     if (success) {
                         Toasto.show_toast(this, getString(R.string.data_backed_up), 1, 0);
+                        backupDatabase.restartApp(new Intent(getApplicationContext(), MainActivity.class));
                     }
                 }).backup());
 
@@ -159,8 +160,7 @@ public class SettingsActivity extends AppCompatActivity implements PinOptionsBot
                 .backupLocation(RoomBackup.BACKUP_FILE_LOCATION_CUSTOM_DIALOG)
                 .onCompleteListener((success, message) -> {
                     if (success) {
-                        startActivity(new Intent(SettingsActivity.this, MainActivity.class));
-                        finishAffinity();
+                        backupDatabase.restartApp(new Intent(getApplicationContext(), MainActivity.class));
                     } else {
                         finish();
                     }

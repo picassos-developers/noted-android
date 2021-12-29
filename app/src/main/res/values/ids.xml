@@ -40,7 +40,6 @@
     <item name="take_photo" type="id" />
     <item name="select_video_from_gallery" type="id" />
     <item name="select_image_from_gallery" type="id" />
-    <item name="chip_default" type="id" />
     <item name="fragment_container" type="id" />
     <item name="navigation_drawer" type="id" />
     <item name="toolbar_selector" type="id" />
@@ -74,9 +73,7 @@
     <item name="categories_recyclerview" type="id" />
     <item name="edit_category" type="id" />
     <item name="note_save" type="id" />
-    <item name="todo_save" type="id" />
     <item name="todo_created_at" type="id" />
-    <item name="todo_category" type="id" />
     <item name="todo_delete" type="id" />
     <item name="note_title" type="id" />
     <item name="pin_code" type="id" />
@@ -114,7 +111,6 @@
     <item name="item_note_locker" type="id" />
     <item name="item_note_subtitle" type="id" />
     <item name="item_note_created_at" type="id" />
-    <item name="indicator_dots" type="id" />
     <item name="pin_lock" type="id" />
     <item name="item_note_reminder_container" type="id" />
     <item name="item_note_reminder" type="id" />
@@ -128,7 +124,6 @@
     <item name="item_category_title" type="id" />
     <item name="item_category_delete" type="id" />
     <item name="item_category_edit" type="id" />
-    <item name="attach_link_title" type="id" />
     <item name="item_todo_layout" type="id" />
     <item name="item_todo_title" type="id" />
     <item name="item_todo_list_title" type="id" />
@@ -164,7 +159,6 @@
     <item name="screen_on_mode" type="id" />
     <item name="login_with_fingerprint_container" type="id" />
     <item name="login_with_fingerprint" type="id" />
-    <item name="note_pin_code" type="id" />
     <item name="privacy_policy" type="id" />
     <item name="terms_of_use" type="id" />
     <item name="share_app" type="id" />

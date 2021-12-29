@@ -139,36 +139,32 @@ public class SettingsActivity extends AppCompatActivity implements PinOptionsBot
         findViewById(R.id.share_app).setOnClickListener(v -> shareApp());
 
         // backup notes
-        findViewById(R.id.backup_notes).setOnClickListener(v -> {
-            backupDatabase.database(APP_DATABASE.requestDatabase(this))
-                    .enableLogDebug(true)
-                    .backupIsEncrypted(false)
-                    .backupLocation(RoomBackup.BACKUP_FILE_LOCATION_INTERNAL)
-                    .maxFileCount(5)
-                    .customBackupFileName("database.sqlite3")
-                    .onCompleteListener((success, message) -> {
-                        Toasto.show_toast(this, message, 1, 0);
-                    }).backup();
-        });
-
-
+        findViewById(R.id.backup_notes).setOnClickListener(v -> backupDatabase.database(APP_DATABASE.requestDatabase(this))
+                .enableLogDebug(true)
+                .backupIsEncrypted(false)
+                .backupLocation(RoomBackup.BACKUP_FILE_LOCATION_CUSTOM_DIALOG)
+                .maxFileCount(5)
+                .customBackupFileName("database.sqlite3")
+                .onCompleteListener((success, message) -> {
+                    if (success) {
+                        Toasto.show_toast(this, getString(R.string.data_backed_up), 1, 0);
+                    }
+                }).backup());
 
         // restore notes
-        findViewById(R.id.restore_notes).setOnClickListener(v -> {
-            backupDatabase.database(APP_DATABASE.requestDatabase(this))
-                    .enableLogDebug(true)
-                    .backupIsEncrypted(false)
-                    .customBackupFileName("database.sqlite3")
-                    .backupLocation(RoomBackup.BACKUP_FILE_LOCATION_INTERNAL)
-                    .onCompleteListener((success, message) -> {
-                        if (success) {
-                            startActivity(new Intent(SettingsActivity.this, MainActivity.class));
-                            finishAffinity();
-                        } else {
-                            finish();
-                        }
-                    }).restore();
-        });
+        findViewById(R.id.restore_notes).setOnClickListener(v -> backupDatabase.database(APP_DATABASE.requestDatabase(this))
+                .enableLogDebug(true)
+                .backupIsEncrypted(false)
+                .customBackupFileName("database.sqlite3")
+                .backupLocation(RoomBackup.BACKUP_FILE_LOCATION_CUSTOM_DIALOG)
+                .onCompleteListener((success, message) -> {
+                    if (success) {
+                        startActivity(new Intent(SettingsActivity.this, MainActivity.class));
+                        finishAffinity();
+                    } else {
+                        finish();
+                    }
+                }).restore());
 
         // send feedback
         findViewById(R.id.send_feedback).setOnClickListener(v -> sendFeedback());

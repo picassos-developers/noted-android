@@ -169,4 +169,5 @@
     <string name="backup_notes">Backup Notes</string>
     <string name="restore_notes">Restore Notes</string>
     <string name="failed_to_authenticate_fingerprint">Failed to authenticate fingerprint</string>
+    <string name="data_backed_up">Data backed up successfully</string>
 </resources>

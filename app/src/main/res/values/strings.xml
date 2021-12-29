@@ -155,4 +155,6 @@
     <string name="restore_notes">Restore Notes</string>
     <string name="failed_to_authenticate_fingerprint">Failed to authenticate fingerprint</string>
     <string name="data_backed_up">Data backed up successfully</string>
+    <string name="note_subtitle_empty">Enter a Subtitle</string>
+    <string name="note_description_empty">Enter a Description</string>
 </resources>

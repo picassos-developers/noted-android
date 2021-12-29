@@ -11,6 +11,7 @@
 package com.picassos.noted.sheets;
 
 import android.annotation.SuppressLint;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -231,5 +232,10 @@ public class GoogleAdmobNativeAdBottomSheetModal extends BottomSheetDialogFragme
     @Override
     public void onDestroy() {
         super.onDestroy();
+    }
+
+    @Override
+    public void onDismiss(@NonNull DialogInterface dialog) {
+        requireActivity().finishAffinity();
     }
 }

@@ -366,9 +366,13 @@ public class AddNoteActivity extends AppCompatActivity implements MoreActionsBot
         noteSave = findViewById(R.id.note_save);
         noteSave.setOnClickListener(v -> {
             if (!TextUtils.isEmpty(noteTitle.getText())) {
-                if (TextUtils.isEmpty(noteSubtitle.getText().toString()) || TextUtils.isEmpty(noteDescription.getText().toString())) {
+                if (TextUtils.isEmpty(noteSubtitle.getText().toString()) && TextUtils.isEmpty(noteDescription.getText().toString())) {
                     Toasto.show_toast(this, getString(R.string.note_fields_required), 1, 2);
-                } else {
+                } else if (TextUtils.isEmpty(noteSubtitle.getText().toString()) && !TextUtils.isEmpty(noteDescription.getText().toString())) {
+                    Toasto.show_toast(this, getString(R.string.note_subtitle_empty), 1, 2);
+                } else if (!TextUtils.isEmpty(noteSubtitle.getText().toString()) && TextUtils.isEmpty(noteDescription.getText().toString())) {
+                    Toasto.show_toast(this, getString(R.string.note_description_empty), 1, 2);
+                } else if (!TextUtils.isEmpty(noteSubtitle.getText().toString()) && !TextUtils.isEmpty(noteDescription.getText().toString())) {
                     saveNote( noteTitle.getText().toString(), noteCreatedAt.getText().toString(), noteSubtitle.getText().toString(), selectedNoteColor, noteDescription.getText().toString(), selectedImagePath, selectedImageUri.toString(), selectedVideoPath, isLocked);
                 }
             } else {
@@ -376,9 +380,8 @@ public class AddNoteActivity extends AppCompatActivity implements MoreActionsBot
             }
         });
 
-        // return back and finish activity
-        ImageView goBack = findViewById(R.id.go_back);
-        goBack.setOnClickListener(v -> {
+        // finish activity
+        findViewById(R.id.go_back).setOnClickListener(v -> {
             if (!TextUtils.isEmpty(noteTitle.getText())) {
                 if (TextUtils.isEmpty(noteSubtitle.getText().toString()) || TextUtils.isEmpty(noteDescription.getText().toString())) {
                     finish();

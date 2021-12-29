@@ -39,7 +39,7 @@ public class Constants {
      * 2. rewarded ad
      */
     public static final boolean ENABLE_GOOGLE_ADMOB_ADS = true;
-    public static final String GOOGLE_ADMOB_NATIVE_AD_UNI_ID = "ca-app-pub-5451983796114290/6371660017";
+    public static final String GOOGLE_ADMOB_NATIVE_AD_UNIT_ID = "ca-app-pub-5451983796114290/6371660017";
     public static final String GOOGLE_ADMOB_REWARDED_AD_UNIT_ID = "ca-app-pub-5451983796114290/2679827013";
 
     /**

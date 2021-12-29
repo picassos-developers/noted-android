@@ -157,4 +157,7 @@
     <string name="data_backed_up">Data backed up successfully</string>
     <string name="note_subtitle_empty">Enter a Subtitle</string>
     <string name="note_description_empty">Enter a Description</string>
+    <string name="_for">for</string>
+    <string name="from">from</string>
+    <string name="advertisement">Advertisement</string>
 </resources>

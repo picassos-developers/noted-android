@@ -145,10 +145,10 @@ public class MoreActionsBottomSheetModal extends BottomSheetDialogFragment {
             if (note.isNote_locked()) {
                 lockNoteText.setText(getString(R.string.unlock));
             } else {
-                lockNoteText.setText(getString(R.string.lock));
+                lockNoteText.setText(getString(R.string.note_pin_code));
             }
         } else {
-            lockNoteText.setText(getString(R.string.lock));
+            lockNoteText.setText(getString(R.string.note_pin_code));
         }
 
         // share note

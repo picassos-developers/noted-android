@@ -3,7 +3,7 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
-        <entry key="app/src/main/res/drawable/button_mini_dark.xml" value="0.26927083333333335" />
+        <entry key="..\:/Users/Lenovo/StudioProjects/noted-android/app/src/main/res/layout/popup_attach_link.xml" value="0.209375" />
         <entry key="app/src/main/res/drawable/toast_alert.xml" value="0.26927083333333335" />
         <entry key="app/src/main/res/drawable/toast_dark.xml" value="0.26927083333333335" />
         <entry key="app/src/main/res/drawable/toast_warning.xml" value="0.26927083333333335" />
@@ -14,11 +14,7 @@
         <entry key="app/src/main/res/layout/activity_edit_category.xml" value="0.253125" />
         <entry key="app/src/main/res/layout/activity_filtered_notes.xml" value="0.253125" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.253125" />
-        <entry key="app/src/main/res/layout/activity_restore_notes.xml" value="0.253125" />
-        <entry key="app/src/main/res/layout/activity_settings.xml" value="0.33" />
         <entry key="app/src/main/res/layout/activity_view_attached_video.xml" value="0.253125" />
-        <entry key="app/src/main/res/layout/google_admob_native_ad_bottom_sheet_modal.xml" value="0.253125" />
-        <entry key="app/src/main/res/layout/google_admob_native_ad_layout.xml" value="0.253125" />
         <entry key="app/src/main/res/layout/toast_layout_alert.xml" value="0.253125" />
         <entry key="app/src/main/res/layout/toast_layout_primary.xml" value="0.253125" />
         <entry key="app/src/main/res/layout/toast_layout_warning.xml" value="0.253125" />

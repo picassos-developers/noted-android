@@ -89,7 +89,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="@string/lock"
+                android:text="@string/note_pin_code"
                 android:textAlignment="center"
                 android:textColor="?color_dark"
                 android:textSize="13sp" />

@@ -5,6 +5,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -28,6 +29,7 @@ public class EditCategoryActivity extends AppCompatActivity implements Categorie
 
     // bundle
     Bundle bundle;
+    Context context;
 
     private List<Category> categories;
     private CategoriesAdapter categoriesAdapter;
@@ -47,6 +49,7 @@ public class EditCategoryActivity extends AppCompatActivity implements Categorie
 
         // Bundle
         bundle = new Bundle();
+        context = getApplicationContext();
 
         // return back and finish activity
         ImageView goBack = findViewById(R.id.go_back);
@@ -104,7 +107,6 @@ public class EditCategoryActivity extends AppCompatActivity implements Categorie
      * @param category for class
      */
     private void requestDeleteCategory(Category category) {
-        @SuppressLint("StaticFieldLeak")
         class DeleteCategoryTask extends AsyncTask<Void, Void, Void> {
             @Override
             protected Void doInBackground(Void... voids) {
@@ -118,7 +120,7 @@ public class EditCategoryActivity extends AppCompatActivity implements Categorie
                 categories.remove(categoryClickedPosition);
                 categoriesAdapter.notifyItemRemoved(categoryClickedPosition);
 
-                Toasto.show_toast(getApplicationContext(), getString(R.string.category_deleted), 0, 0);
+                Toasto.show_toast(context, getString(R.string.category_deleted), 1, 0);
             }
         }
 

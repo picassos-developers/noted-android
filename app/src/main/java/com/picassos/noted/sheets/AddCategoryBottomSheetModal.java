@@ -18,6 +18,7 @@ import androidx.annotation.Nullable;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.picassos.noted.R;
+import com.picassos.noted.constants.RequestCodes;
 import com.picassos.noted.databases.APP_DATABASE;
 import com.picassos.noted.entities.Category;
 
@@ -34,8 +35,6 @@ public class AddCategoryBottomSheetModal extends BottomSheetDialogFragment {
     private EditText categoryTitle;
 
     OnAddListener onAddListener;
-
-    private final int REQUEST_ADD_CATEGORY_CODE = 3;
 
     public AddCategoryBottomSheetModal() {
 
@@ -122,7 +121,7 @@ public class AddCategoryBottomSheetModal extends BottomSheetDialogFragment {
             protected void onPostExecute(Void aVoid) {
                 super.onPostExecute(aVoid);
 
-                onAddListener.onAddListener(REQUEST_ADD_CATEGORY_CODE);
+                onAddListener.onAddListener(RequestCodes.REQUEST_ADD_CATEGORY_CODE);
 
                 dismiss();
             }

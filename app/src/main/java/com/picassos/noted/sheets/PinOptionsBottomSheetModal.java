@@ -28,6 +28,7 @@ import androidx.annotation.Nullable;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.picassos.noted.R;
 import com.picassos.noted.activities.CreatePinActivity;
+import com.picassos.noted.constants.RequestCodes;
 import com.picassos.noted.databases.APP_DATABASE;
 import com.picassos.noted.sharedPreferences.SharedPref;
 
@@ -40,9 +41,6 @@ public class PinOptionsBottomSheetModal extends BottomSheetDialogFragment {
     }
 
     OnRemoveListener onRemoveListener;
-
-    public static final int REQUEST_REMOVE_PIN_CODE = 1;
-    public static final int REQUEST_UPDATE_PIN_CODE = 2;
 
     public PinOptionsBottomSheetModal() {
 
@@ -72,7 +70,7 @@ public class PinOptionsBottomSheetModal extends BottomSheetDialogFragment {
             removePin.setVisibility(View.GONE);
         } else {
             removePin.setVisibility(View.VISIBLE);
-            removePin.setOnClickListener(v -> requestPinCodeDialog(REQUEST_REMOVE_PIN_CODE));
+            removePin.setOnClickListener(v -> requestPinCodeDialog(RequestCodes.REQUEST_REMOVE_PIN_CODE));
         }
 
         // update pin
@@ -81,7 +79,7 @@ public class PinOptionsBottomSheetModal extends BottomSheetDialogFragment {
                 startActivity(new Intent(getContext(), CreatePinActivity.class));
                 dismiss();
             } else {
-                requestPinCodeDialog(REQUEST_UPDATE_PIN_CODE);
+                requestPinCodeDialog(RequestCodes.REQUEST_UPDATE_PIN_CODE);
             }
         });
 
@@ -130,14 +128,14 @@ public class PinOptionsBottomSheetModal extends BottomSheetDialogFragment {
                 if (!TextUtils.isEmpty(pinCode.getText().toString())) {
                     if (sharedPref.loadNotePinCode() == Integer.parseInt(pinCode.getText().toString())) {
                         switch (request) {
-                            case REQUEST_REMOVE_PIN_CODE:
+                            case RequestCodes.REQUEST_REMOVE_PIN_CODE:
                                 // reset, remove note pin code
                                 sharedPref.setNotePinCode(0);
                                 requestRemovePin();
                                 break;
-                            case REQUEST_UPDATE_PIN_CODE:
+                            case RequestCodes.REQUEST_UPDATE_PIN_CODE:
                                 // update pin code
-                                startActivity(new Intent(getContext(), CreatePinActivity.class));
+                                startActivity(new Intent(requireContext(), CreatePinActivity.class));
                                 break;
                         }
 
@@ -173,13 +171,13 @@ public class PinOptionsBottomSheetModal extends BottomSheetDialogFragment {
 
             @Override
             protected Integer doInBackground(Void... voids) {
-                return APP_DATABASE.requestDatabase(getContext()).dao().request_remove_lock();
+                return APP_DATABASE.requestDatabase(requireContext()).dao().request_remove_lock();
             }
 
             @Override
             protected void onPostExecute(Integer notes_inline) {
                 super.onPostExecute(notes_inline);
-                onRemoveListener.onRemoveListener(REQUEST_REMOVE_PIN_CODE);
+                onRemoveListener.onRemoveListener(RequestCodes.REQUEST_REMOVE_PIN_CODE);
             }
 
         }

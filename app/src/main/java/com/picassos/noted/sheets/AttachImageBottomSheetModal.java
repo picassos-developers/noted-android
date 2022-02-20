@@ -25,6 +25,7 @@ import androidx.core.content.FileProvider;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.picassos.noted.R;
+import com.picassos.noted.constants.RequestCodes;
 import com.picassos.noted.utils.Toasto;
 
 import java.io.File;
@@ -51,13 +52,6 @@ public class AttachImageBottomSheetModal extends BottomSheetDialogFragment {
             Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
 
-    // REQUEST CODES
-    private static final int REQUEST_STORAGE_PERMISSION_CODE = 1;
-    private static final int REQUEST_CAMERA_PERMISSION_CODE = 2;
-    private static final int REQUEST_SELECT_IMAGE_CODE = 3;
-    public static final int REQUEST_SELECT_IMAGE_FROM_GALLERY_CODE = 4;
-    public static final int REQUEST_CAMERA_IMAGE_CODE = 5;
-    public static final int REQUEST_SELECT_VIDEO_FROM_GALLERY_CODE = 6;
 
     public interface OnChooseImageListener {
         void onChooseImageListener(int requestCode, Bitmap bitmap, Uri uri);
@@ -99,28 +93,25 @@ public class AttachImageBottomSheetModal extends BottomSheetDialogFragment {
         bundle = new Bundle();
 
         // take a photo
-        LinearLayout takePhoto = view.findViewById(R.id.take_photo);
-        takePhoto.setOnClickListener(v -> {
+        view.findViewById(R.id.take_photo).setOnClickListener(v -> {
             if (checkPermissions()) {
                 requestCaptureImage();
             }
         });
 
         // select image from gallery
-        LinearLayout selectImageFromGallery = view.findViewById(R.id.select_image_from_gallery);
-        selectImageFromGallery.setOnClickListener(v -> {
+        view.findViewById(R.id.select_image_from_gallery).setOnClickListener(v -> {
             if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(requireActivity(), new String[] { Manifest.permission.READ_EXTERNAL_STORAGE }, REQUEST_STORAGE_PERMISSION_CODE);
+                ActivityCompat.requestPermissions(requireActivity(), new String[] { Manifest.permission.READ_EXTERNAL_STORAGE }, RequestCodes.REQUEST_STORAGE_PERMISSION_CODE);
             } else {
                 requestSelectImage();
             }
         });
 
         // select video from gallery
-        LinearLayout selectVideoFromGallery = view.findViewById(R.id.select_video_from_gallery);
-        selectVideoFromGallery.setOnClickListener(v -> {
+        view.findViewById(R.id.select_video_from_gallery).setOnClickListener(v -> {
             if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(requireActivity(), new String[] { Manifest.permission.READ_EXTERNAL_STORAGE }, REQUEST_STORAGE_PERMISSION_CODE);
+                ActivityCompat.requestPermissions(requireActivity(), new String[] { Manifest.permission.READ_EXTERNAL_STORAGE }, RequestCodes.REQUEST_STORAGE_PERMISSION_CODE);
             } else {
                 requestSelectVideo();
             }
@@ -139,10 +130,12 @@ public class AttachImageBottomSheetModal extends BottomSheetDialogFragment {
      * allow for images only as attachment
      */
     private void requestSelectImage() {
+
+
         Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
 
         if (intent.resolveActivity(requireContext().getPackageManager()) != null) {
-            startActivityForResult(intent, REQUEST_SELECT_IMAGE_CODE);
+            startActivityForResult(intent, RequestCodes.REQUEST_SELECT_IMAGE_CODE);
         }
     }
 
@@ -154,7 +147,7 @@ public class AttachImageBottomSheetModal extends BottomSheetDialogFragment {
         Intent intent = new Intent();
         intent.setType("video/*");
         intent.setAction(Intent.ACTION_GET_CONTENT);
-        startActivityForResult(Intent.createChooser(intent, "Select Video"), REQUEST_SELECT_VIDEO_FROM_GALLERY_CODE);
+        startActivityForResult(Intent.createChooser(intent, "Select Video"), RequestCodes.REQUEST_SELECT_VIDEO_FROM_GALLERY_CODE);
     }
 
     /**
@@ -181,7 +174,7 @@ public class AttachImageBottomSheetModal extends BottomSheetDialogFragment {
                 }
                 try {
                     intent.putExtra("return_data", true);
-                    startActivityForResult(intent, REQUEST_CAMERA_IMAGE_CODE);
+                    startActivityForResult(intent, RequestCodes.REQUEST_CAMERA_IMAGE_CODE);
                 } catch (ActivityNotFoundException e) {
                     Toasto.show_toast(requireContext(), e.getMessage(), 1, 1);
                 }
@@ -215,13 +208,13 @@ public class AttachImageBottomSheetModal extends BottomSheetDialogFragment {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-        if (requestCode == REQUEST_STORAGE_PERMISSION_CODE && grantResults.length > 0) {
+        if (requestCode == RequestCodes.REQUEST_STORAGE_PERMISSION_CODE && grantResults.length > 0) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 requestSelectImage();
             } else {
                 Toasto.show_toast(requireContext(), getString(R.string.permission_denied), 1, 1);
             }
-        } else if (requestCode == REQUEST_CAMERA_PERMISSION_CODE && grantResults.length > 0) {
+        } else if (requestCode == RequestCodes.REQUEST_CAMERA_PERMISSION_CODE && grantResults.length > 0) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 requestCaptureImage();
             } else {
@@ -238,7 +231,7 @@ public class AttachImageBottomSheetModal extends BottomSheetDialogFragment {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == REQUEST_SELECT_IMAGE_CODE && resultCode == RESULT_OK) {
+        if (requestCode == RequestCodes.REQUEST_SELECT_IMAGE_CODE && resultCode == RESULT_OK) {
             if (data != null) {
                 Uri selected_image_uri = data.getData();
 
@@ -247,14 +240,14 @@ public class AttachImageBottomSheetModal extends BottomSheetDialogFragment {
                         InputStream inputStream = requireContext().getContentResolver().openInputStream(selected_image_uri);
                         Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
 
-                        onChooseImageListener.onChooseImageListener(REQUEST_SELECT_IMAGE_FROM_GALLERY_CODE, bitmap, selected_image_uri);
+                        onChooseImageListener.onChooseImageListener(RequestCodes.REQUEST_SELECT_IMAGE_FROM_GALLERY_CODE, bitmap, selected_image_uri);
                         dismiss();
                     } catch (Exception exception) {
                         Toasto.show_toast(requireContext(), exception.getMessage(), 1, 1);
                     }
                 }
             }
-        } else if (requestCode == REQUEST_CAMERA_IMAGE_CODE && resultCode == RESULT_OK) {
+        } else if (requestCode == RequestCodes.REQUEST_CAMERA_IMAGE_CODE && resultCode == RESULT_OK) {
             if (bundle != null) {
                 Uri selected_image_uri = Uri.parse(bundle.getString(MediaStore.EXTRA_OUTPUT));
 
@@ -263,18 +256,18 @@ public class AttachImageBottomSheetModal extends BottomSheetDialogFragment {
                         InputStream inputStream = requireContext().getContentResolver().openInputStream(selected_image_uri);
                         Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
 
-                        onChooseImageListener.onChooseImageListener(REQUEST_CAMERA_IMAGE_CODE, bitmap, selected_image_uri);
+                        onChooseImageListener.onChooseImageListener(RequestCodes.REQUEST_CAMERA_IMAGE_CODE, bitmap, selected_image_uri);
                         dismiss();
                     } catch (Exception exception) {
                         Toasto.show_toast(requireContext(), exception.getMessage(), 1, 1);
                     }
                 }
             }
-        } else if (requestCode == REQUEST_SELECT_VIDEO_FROM_GALLERY_CODE && resultCode == RESULT_OK) {
+        } else if (requestCode == RequestCodes.REQUEST_SELECT_VIDEO_FROM_GALLERY_CODE && resultCode == RESULT_OK) {
             Uri selected_video_uri = data.getData();
 
             if (selected_video_uri != null) {
-                onChooseVideoListener.onChooseVideoListener(REQUEST_SELECT_VIDEO_FROM_GALLERY_CODE, selected_video_uri);
+                onChooseVideoListener.onChooseVideoListener(RequestCodes.REQUEST_SELECT_VIDEO_FROM_GALLERY_CODE, selected_video_uri);
                 dismiss();
             }
         }

@@ -15,7 +15,7 @@
     <string name="cancel">Cancel</string>
     <string name="add_link">Attach Link</string>
     <string name="attached_links">Attached Links</string>
-    <string name="delete">Delete Permanently</string>
+    <string name="delete">Delete</string>
     <string name="share">Share</string>
     <string name="share_app">Share App</string>
     <string name="share_note">Share Note</string>
@@ -103,7 +103,7 @@
     <string name="colors">Colors</string>
     <string name="images">Images</string>
     <string name="videos">Videos</string>
-    <string name="note_pin_code">Add Note PIN</string>
+    <string name="note_pin_code">Lock Note</string>
     <string name="enter_new_pin_code">Enter 8 Digit PIN</string>
     <string name="pin_code_empty">PIN Can\'t Be Empty</string>
     <string name="note_locked">Note locked, Save to Apply Changes</string>
@@ -125,11 +125,9 @@
     <string name="export_as_txt">Export Note as .txt file</string>
     <string name="export_as_csv">Export Note as .csv file</string>
     <string name="speech_input">Speech Input</string>
+    <string name="please_save_your_note_first">Please Save your Note First</string>
     <string name="there_are_no_notifications_yet">You don\'t have any notifications.</string>
     <string name="save_note_before_copy">Make sure to save note before copy</string>
-    <string name="save_note_before_export">Please Save your Note First</string>
-    <string name="save_note_before_speech">PleaseSave your Note First</string>
-    <string name="save_note_before_open_reader_mode">Please Save your Note First</string>
     <string name="notes">Notes</string>
     <string name="todos">Tasks</string>
     <string name="all_todos">All Tasks</string>

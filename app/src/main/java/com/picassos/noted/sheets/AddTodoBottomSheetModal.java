@@ -1,9 +1,7 @@
 package com.picassos.noted.sheets;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Editable;
@@ -21,11 +19,14 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.picassos.noted.R;
+import com.picassos.noted.constants.RequestCodes;
 import com.picassos.noted.databases.APP_DATABASE;
 import com.picassos.noted.entities.Todo;
+import com.picassos.noted.models.SharedViewModel;
 import com.picassos.noted.sharedPreferences.SharedPref;
 import com.picassos.noted.utils.Helper;
 import com.picassos.noted.utils.Toasto;
@@ -36,6 +37,7 @@ import java.util.Locale;
 import java.util.Objects;
 
 public class AddTodoBottomSheetModal extends BottomSheetDialogFragment {
+    SharedViewModel sharedViewModel;
 
     // shared preferences
     private SharedPref sharedPref;
@@ -62,6 +64,7 @@ public class AddTodoBottomSheetModal extends BottomSheetDialogFragment {
         todoTitle = view.findViewById(R.id.todo_title);
         todoTitle.addTextChangedListener(todoTitleTextWatcher);
         todoTitle.requestFocus();
+
         // show keyboard
         InputMethodManager inputMethodManager = (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         Objects.requireNonNull(inputMethodManager).toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
@@ -101,6 +104,13 @@ public class AddTodoBottomSheetModal extends BottomSheetDialogFragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         sharedPref = new SharedPref(requireContext());
         super.onCreate(savedInstanceState);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        sharedViewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
     }
 
     /**
@@ -155,10 +165,7 @@ public class AddTodoBottomSheetModal extends BottomSheetDialogFragment {
                 InputMethodManager inputMethodManager = (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
                 Objects.requireNonNull(inputMethodManager).toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
 
-                Intent intent = new Intent();
-                intent.putExtra("is_added", true);
-                Objects.requireNonNull(getTargetFragment()).onActivityResult(getTargetRequestCode(), Activity.RESULT_OK, intent);
-
+                sharedViewModel.setRequestCode(RequestCodes.REQUEST_ACTION_TODO_CODE);
                 dismiss();
             }
         }

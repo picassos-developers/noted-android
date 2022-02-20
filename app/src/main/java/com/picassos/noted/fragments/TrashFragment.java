@@ -2,7 +2,6 @@ package com.picassos.noted.fragments;
 
 import android.annotation.SuppressLint;
 import android.app.Dialog;
-import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.AsyncTask;
@@ -17,15 +16,18 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.picassos.noted.R;
 import com.picassos.noted.activities.MainActivity;
 import com.picassos.noted.adapters.TrashNotesAdapter;
+import com.picassos.noted.constants.RequestCodes;
 import com.picassos.noted.databases.APP_DATABASE;
 import com.picassos.noted.entities.TrashNote;
 import com.picassos.noted.listeners.TrashNotesListener;
+import com.picassos.noted.models.SharedViewModel;
 import com.picassos.noted.sheets.TrashNoteActionsBottomSheetModal;
 import com.picassos.noted.utils.Toasto;
 
@@ -33,6 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TrashFragment extends Fragment implements TrashNotesListener {
+    SharedViewModel sharedViewModel;
 
     // Bundle
     Bundle bundle;
@@ -53,7 +56,7 @@ public class TrashFragment extends Fragment implements TrashNotesListener {
 
         // notes recyclerview
         RecyclerView trashNotesRecyclerview = view.findViewById(R.id.notes_recyclerview);
-        trashNotesRecyclerview.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
+        trashNotesRecyclerview.setLayoutManager(new LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false));
 
         // notes list, adapter
         trashNotes = new ArrayList<>();
@@ -101,12 +104,30 @@ public class TrashFragment extends Fragment implements TrashNotesListener {
             confirmDialog.show();
         });
 
+        sharedViewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
+        sharedViewModel.getRequestCode().observe(requireActivity(), item -> {
+            switch (item) {
+                case RequestCodes.REQUEST_RESTORE_NOTE_CODE:
+                    requestTrashNotes();
+                    Toasto.show_toast(requireContext(), getString(R.string.note_restored), 1, 0);
+                    break;
+                case RequestCodes.REQUEST_DELETE_NOTE_PERMANENTLY_CODE:
+                    requestTrashNotes();
+                    Toasto.show_toast(requireContext(), getString(R.string.note_deleted_permanently), 1, 0);
+                    break;
+                case RequestCodes.REQUEST_DISCARD_NOTE_CODE:
+                    Toasto.show_toast(requireContext(), getString(R.string.note_discarded), 1, 0);
+                    break;
+            }
+        });
+
         return view;
     }
 
     /**
      * request trash notes
      */
+    @SuppressLint("NotifyDataSetChanged")
     private void requestTrashNotes() {
         trashNotes.clear();
         trashNotesAdapter.notifyDataSetChanged();
@@ -116,7 +137,7 @@ public class TrashFragment extends Fragment implements TrashNotesListener {
 
             @Override
             protected List<TrashNote> doInBackground(Void... voids) {
-                return APP_DATABASE.requestDatabase(getContext()).dao().request_trash_notes();
+                return APP_DATABASE.requestDatabase(requireContext()).dao().request_trash_notes();
             }
 
             @Override
@@ -147,7 +168,7 @@ public class TrashFragment extends Fragment implements TrashNotesListener {
         class DeleteAllTrashNotesTask extends AsyncTask<Void, Void, Void> {
             @Override
             protected Void doInBackground(Void... voids) {
-                APP_DATABASE.requestDatabase(getContext()).dao().request_delete_all_trash_note();
+                APP_DATABASE.requestDatabase(requireContext()).dao().request_delete_all_trash_note();
                 return null;
             }
 
@@ -173,24 +194,6 @@ public class TrashFragment extends Fragment implements TrashNotesListener {
 
         TrashNoteActionsBottomSheetModal trashNoteActionsBottomSheetModal = new TrashNoteActionsBottomSheetModal();
         trashNoteActionsBottomSheetModal.setArguments(bundle);
-        trashNoteActionsBottomSheetModal.setTargetFragment(this, 3);
-        trashNoteActionsBottomSheetModal.show(requireFragmentManager(), "TAG");
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        // restore note
-        if (resultCode == TrashNoteActionsBottomSheetModal.REQUEST_RESTORE_NOTE_CODE) {
-            requestTrashNotes();
-            Toasto.show_toast(requireContext(), getString(R.string.note_restored), 1, 0);
-        // delete note
-        } else if (resultCode == TrashNoteActionsBottomSheetModal.REQUEST_DELETE_NOTE_CODE) {
-            requestTrashNotes();
-            Toasto.show_toast(requireContext(), getString(R.string.note_deleted_permanently), 1, 0);
-        // discard note
-        } else if (resultCode == TrashNoteActionsBottomSheetModal.REQUEST_DISCARD_NOTE_CODE) {
-            Toasto.show_toast(requireContext(), getString(R.string.note_discarded), 1, 0);
-        }
+        trashNoteActionsBottomSheetModal.show(getChildFragmentManager(), "TAG");
     }
 }

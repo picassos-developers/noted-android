@@ -157,7 +157,7 @@ public class SplashActivity extends AppCompatActivity {
                     KeyguardManager keyguardManager = (KeyguardManager) getSystemService(KEYGUARD_SERVICE);
                     if (keyguardManager.isKeyguardSecure()) {
                         Intent intent = keyguardManager.createConfirmDeviceCredentialIntent("", "");
-                        intent.putExtra("request", RequestCodes.INTENT_AUTH_REQUEST_CODE);
+                        setResult(RequestCodes.INTENT_AUTH_REQUEST_CODE, intent);
                         startActivityForResult.launch(intent);
                     } else {
                         requestLaunchMainInstance();
@@ -217,11 +217,9 @@ public class SplashActivity extends AppCompatActivity {
 
     @SuppressLint("NotifyDataSetChanged")
     ActivityResultLauncher<Intent> startActivityForResult = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
-        if (result != null && result.getResultCode() == RESULT_OK) {
-            if (result.getData() != null) {
-                if (result.getData().getIntExtra("request", 0) == RequestCodes.INTENT_AUTH_REQUEST_CODE) {
-                    requestLaunchMainInstance();
-                }
+        if (result != null) {
+            if (result.getResultCode() != RequestCodes.INTENT_AUTH_REQUEST_CODE) {
+                requestLaunchMainInstance();
             }
         }
     });

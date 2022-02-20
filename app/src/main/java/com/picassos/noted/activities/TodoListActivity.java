@@ -11,7 +11,6 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.picassos.noted.R;
@@ -63,8 +62,7 @@ public class TodoListActivity extends AppCompatActivity implements TodosListener
         }
 
         // return back and finish activity
-        ImageView goBack = findViewById(R.id.go_back);
-        goBack.setOnClickListener(v -> setResult());
+        findViewById(R.id.go_back).setOnClickListener(v -> setResult());
 
         // list title
         TextView listTitle = findViewById(R.id.todo_list_title);
@@ -162,24 +160,17 @@ public class TodoListActivity extends AppCompatActivity implements TodosListener
 
     @SuppressLint("NotifyDataSetChanged")
     ActivityResultLauncher<Intent> startActivityForResult = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
-        if (result != null && result.getResultCode() == RESULT_OK) {
-            if (result.getData() != null) {
-                if (result.getData().getIntExtra("request", 0) == RequestCodes.REQUEST_VIEW_TODO_CODE) {
-                    if (result.getData().getIntExtra("request", 0) == 1
-                            || result.getData().getIntExtra("request", 0) == 2
-                            || result.getData().getIntExtra("request", 0) == 3) {
-                        refreshTodos();
-                        is_updated = true;
-                    }
-                }
+        if (result != null) {
+            if (result.getResultCode() == RequestCodes.REQUEST_ACTION_TODO_CODE) {
+                refreshTodos();
+                is_updated = true;
             }
         }
     });
 
     private void setResult() {
         Intent intent = new Intent();
-        intent.putExtra("is_updated", is_updated);
-        setResult(RESULT_OK, intent);
+        setResult(RequestCodes.REQUEST_UPDATE_LIST_CODE, intent);
         finish();
     }
 

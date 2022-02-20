@@ -1,7 +1,6 @@
 package com.picassos.noted.fragments;
 
 import android.annotation.SuppressLint;
-import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -11,14 +10,17 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.picassos.noted.R;
 import com.picassos.noted.adapters.ArchiveNotesAdapter;
+import com.picassos.noted.constants.RequestCodes;
 import com.picassos.noted.databases.APP_DATABASE;
 import com.picassos.noted.entities.ArchiveNote;
 import com.picassos.noted.listeners.ArchiveNotesListener;
+import com.picassos.noted.models.SharedViewModel;
 import com.picassos.noted.sharedPreferences.SharedPref;
 import com.picassos.noted.sheets.ArchiveNoteActionsBottomSheetModal;
 import com.picassos.noted.sheets.ArchivedNoteViewBottomSheetModal;
@@ -29,6 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ArchiveFragment extends Fragment implements ArchiveNotesListener {
+    SharedViewModel sharedViewModel;
 
     // Bundle
     Bundle bundle;
@@ -37,9 +40,6 @@ public class ArchiveFragment extends Fragment implements ArchiveNotesListener {
     View view;
 
     SharedPref sharedPref;
-
-    // REQUEST CODES
-    private final int REQUEST_CODE_UNLOCK_NOTE = 10;
 
     private List<ArchiveNote> archive_notes;
     private ArchiveNotesAdapter archive_notes_adapter;
@@ -54,14 +54,27 @@ public class ArchiveFragment extends Fragment implements ArchiveNotesListener {
 
         // notes recyclerview
         RecyclerView archive_notes_recyclerview = view.findViewById(R.id.notes_recyclerview);
-        archive_notes_recyclerview.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
+        archive_notes_recyclerview.setLayoutManager(new LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false));
 
         // notes list, adapter
         archive_notes = new ArrayList<>();
         archive_notes_adapter = new ArchiveNotesAdapter(archive_notes, this);
         archive_notes_recyclerview.setAdapter(archive_notes_adapter);
 
-        request_archive_notes();
+        request_archived_notes();
+
+        sharedViewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
+        sharedViewModel.getRequestCode().observe(requireActivity(), item -> {
+            if (item == RequestCodes.REQUEST_UNARCHIVE_NOTE) {
+                request_archived_notes();
+                Toasto.show_toast(requireContext(), getString(R.string.note_restored_from_archive), 1, 0);
+            }
+        });
+        sharedViewModel.getData().observe(requireActivity(), item -> {
+            ArchivedNoteViewBottomSheetModal archivedNoteViewBottomSheetModal = new ArchivedNoteViewBottomSheetModal();
+            archivedNoteViewBottomSheetModal.setArguments(bundle);
+            archivedNoteViewBottomSheetModal.show(getChildFragmentManager(), "TAG");
+        });
 
         return view;
     }
@@ -75,7 +88,8 @@ public class ArchiveFragment extends Fragment implements ArchiveNotesListener {
     /**
      * request archive notes
      */
-    private void request_archive_notes() {
+    @SuppressLint("NotifyDataSetChanged")
+    private void request_archived_notes() {
         archive_notes.clear();
         archive_notes_adapter.notifyDataSetChanged();
 
@@ -111,16 +125,15 @@ public class ArchiveFragment extends Fragment implements ArchiveNotesListener {
         if (sharedPref.loadNotePinCode() == 0) {
             ArchivedNoteViewBottomSheetModal archivedNoteViewBottomSheetModal = new ArchivedNoteViewBottomSheetModal();
             archivedNoteViewBottomSheetModal.setArguments(bundle);
-            archivedNoteViewBottomSheetModal.show(requireFragmentManager(), "TAG");
+            archivedNoteViewBottomSheetModal.show(getChildFragmentManager(), "TAG");
         } else {
             if (archive_note.isNote_locked()) {
                 PasswordBottomSheetModal passwordBottomSheetModal = new PasswordBottomSheetModal();
-                passwordBottomSheetModal.setTargetFragment(ArchiveFragment.this, REQUEST_CODE_UNLOCK_NOTE);
-                passwordBottomSheetModal.show(requireFragmentManager(), "TAG");
+                passwordBottomSheetModal.show(getChildFragmentManager(), "TAG");
             } else {
                 ArchivedNoteViewBottomSheetModal archivedNoteViewBottomSheetModal = new ArchivedNoteViewBottomSheetModal();
                 archivedNoteViewBottomSheetModal.setArguments(bundle);
-                archivedNoteViewBottomSheetModal.show(requireFragmentManager(), "TAG");
+                archivedNoteViewBottomSheetModal.show(getChildFragmentManager(), "TAG");
             }
         }
     }
@@ -131,20 +144,6 @@ public class ArchiveFragment extends Fragment implements ArchiveNotesListener {
 
         ArchiveNoteActionsBottomSheetModal archiveNoteActionsBottomSheetModal = new ArchiveNoteActionsBottomSheetModal();
         archiveNoteActionsBottomSheetModal.setArguments(bundle);
-        archiveNoteActionsBottomSheetModal.setTargetFragment(this, 1);
-        archiveNoteActionsBottomSheetModal.show(requireFragmentManager(), "TAG");
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == ArchiveNoteActionsBottomSheetModal.REQUEST_UNARCHIVE_NOTE) {
-            request_archive_notes();
-            Toasto.show_toast(requireContext(), getString(R.string.note_restored_from_archive), 1, 0);
-        } else if (requestCode == REQUEST_CODE_UNLOCK_NOTE) {
-            ArchivedNoteViewBottomSheetModal archivedNoteViewBottomSheetModal = new ArchivedNoteViewBottomSheetModal();
-            archivedNoteViewBottomSheetModal.setArguments(bundle);
-            archivedNoteViewBottomSheetModal.show(requireFragmentManager(), "TAG");
-        }
+        archiveNoteActionsBottomSheetModal.show(getChildFragmentManager(), "TAG");
     }
 }

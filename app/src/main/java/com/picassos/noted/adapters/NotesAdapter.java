@@ -1,6 +1,6 @@
 package com.picassos.noted.adapters;
 
-import android.content.Context;
+import android.annotation.SuppressLint;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
@@ -25,8 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHolder> {
-
-    private final Context context;
     private final List<Note> notes;
     private final NotesListener notesListener;
     private final NotesActionListener notesActionListener;
@@ -34,8 +32,7 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
     private final SparseBooleanArray selectedItems;
     private int currentSelectedIndex = -1;
 
-    public NotesAdapter(Context context, List<Note> notes, NotesListener notesListener, NotesActionListener notesActionListener) {
-        this.context = context;
+    public NotesAdapter(List<Note> notes, NotesListener notesListener, NotesActionListener notesActionListener) {
         this.notes = notes;
         this.notesListener = notesListener;
         this.notesActionListener = notesActionListener;
@@ -179,6 +176,7 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
     /**
      * clear selection for selected items
      */
+    @SuppressLint("NotifyDataSetChanged")
     public void clearSelection() {
         selectedItems.clear();
         notifyDataSetChanged();

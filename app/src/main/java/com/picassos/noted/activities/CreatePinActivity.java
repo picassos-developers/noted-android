@@ -1,7 +1,6 @@
 package com.picassos.noted.activities;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -16,12 +15,12 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.picassos.noted.R;
+import com.picassos.noted.constants.RequestCodes;
 import com.picassos.noted.sharedPreferences.SharedPref;
 import com.picassos.noted.utils.Helper;
 import com.picassos.noted.utils.Toasto;
 
 public class CreatePinActivity extends AppCompatActivity {
-
     private SharedPref sharedPref;
 
     private EditText pinCode;
@@ -62,14 +61,12 @@ public class CreatePinActivity extends AppCompatActivity {
                 sharedPref.setNotePinCode(Integer.parseInt(pinCode.getText().toString()));
                 Toasto.show_toast(this, getString(R.string.pin_code_set), 0, 0);
                 Intent intent = new Intent();
-                intent.putExtra("result", "lock");
-                setResult(Activity.RESULT_OK, intent);
+                setResult(RequestCodes.REQUEST_SET_PIN_CODE, intent);
             } else {
                 Toasto.show_toast(this, getString(R.string.pin_code_empty), 0, 2);
             }
             finish();
         });
-
     }
 
     /**
@@ -101,6 +98,5 @@ public class CreatePinActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        startActivity(new Intent(CreatePinActivity.this, MainActivity.class));
     }
 }

@@ -10,10 +10,13 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
@@ -26,12 +29,14 @@ import com.picassos.noted.activities.MainActivity;
 import com.picassos.noted.activities.SearchActivity;
 import com.picassos.noted.adapters.ChipCategoryAdapter;
 import com.picassos.noted.adapters.NotesAdapter;
+import com.picassos.noted.constants.RequestCodes;
 import com.picassos.noted.databases.APP_DATABASE;
 import com.picassos.noted.entities.Category;
 import com.picassos.noted.entities.Note;
 import com.picassos.noted.listeners.ChipCategoryListener;
 import com.picassos.noted.listeners.NotesActionListener;
 import com.picassos.noted.listeners.NotesListener;
+import com.picassos.noted.models.SharedViewModel;
 import com.picassos.noted.sharedPreferences.SharedPref;
 import com.picassos.noted.sheets.HomeMoreOptionsBottomSheetModal;
 import com.picassos.noted.sheets.NoteActionsBottomSheetModal;
@@ -41,21 +46,13 @@ import com.picassos.noted.utils.Toasto;
 import java.util.ArrayList;
 import java.util.List;
 
-import static android.app.Activity.RESULT_OK;
-
-public class NotesFragment extends Fragment implements NotesListener,
-        NotesActionListener, ChipCategoryListener {
+public class NotesFragment extends Fragment implements NotesListener, NotesActionListener, ChipCategoryListener {
+    SharedViewModel sharedViewModel;
 
     // BUNDLE
     Bundle bundle;
 
     SharedPref sharedPref;
-
-    // REQUEST CODES
-    private final int REQUEST_CODE_ADD_NOTE_OK = 1;
-    private final int REQUEST_CODE_UPDATE_NOTE_OK = 2;
-    private final int REQUEST_CODE_VIEW_NOTE_OK = 3;
-    private final int REQUEST_CODE_UNLOCK_NOTE = 10;
 
     // View view
     View view;
@@ -69,6 +66,7 @@ public class NotesFragment extends Fragment implements NotesListener,
 
     private int noteClickedPosition = -1;
 
+    @SuppressLint("NotifyDataSetChanged")
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -87,27 +85,24 @@ public class NotesFragment extends Fragment implements NotesListener,
 
         // notes list, adapter
         notes = new ArrayList<>();
-        notesAdapter = new NotesAdapter(getContext(),notes, this, this);
+        notesAdapter = new NotesAdapter(notes, this, this);
         notesRecyclerview.setAdapter(notesAdapter);
 
-        requestNotes(REQUEST_CODE_VIEW_NOTE_OK, "note_id", false);
+        requestNotes(RequestCodes.REQUEST_CODE_VIEW_NOTE_OK, "note_id", false);
 
         // more options from MainActivity.class
         ((MainActivity) requireActivity()).moreOptions.setOnClickListener(v -> {
             HomeMoreOptionsBottomSheetModal homeMoreOptionsBottomSheetModal = new HomeMoreOptionsBottomSheetModal();
-            homeMoreOptionsBottomSheetModal.setTargetFragment(this, 1);
-            homeMoreOptionsBottomSheetModal.show(requireFragmentManager(), "TAG");
+            homeMoreOptionsBottomSheetModal.show(getChildFragmentManager(), "TAG");
         });
 
         // fab, add notes
         CardView addNote = view.findViewById(R.id.add_note);
-        addNote.setOnClickListener(v -> {
-            startActivityForResult(new Intent(getContext(), AddNoteActivity.class), REQUEST_CODE_ADD_NOTE_OK);
-        });
+        addNote.setOnClickListener(v -> startActivityForResult.launch(new Intent(requireContext(), AddNoteActivity.class)));
 
         // categories recyclerview
         RecyclerView categoriesRecyclerview = view.findViewById(R.id.categories_recyclerview);
-        categoriesRecyclerview.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
+        categoriesRecyclerview.setLayoutManager(new LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false));
 
         // categories list, adapter
         categories = new ArrayList<>();
@@ -119,8 +114,43 @@ public class NotesFragment extends Fragment implements NotesListener,
 
         // manage categories
         view.findViewById(R.id.add_category).setOnClickListener(v -> {
-            startActivity(new Intent(getContext(), EditCategoryActivity.class));
+            startActivity(new Intent(requireContext(), EditCategoryActivity.class));
             ((MainActivity) requireContext()).finish();
+        });
+
+        sharedViewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
+        sharedViewModel.getRequestCode().observe(requireActivity(), item -> {
+            switch (item) {
+                case RequestCodes.REQUEST_DELETE_NOTE_CODE:
+                    requestNotes(RequestCodes.REQUEST_CODE_UPDATE_NOTE_OK, "note_id", true);
+                    Toasto.show_toast(requireContext(), getString(R.string.note_moved_to_trash), 1, 0);
+                    break;
+                case RequestCodes.REQUEST_DISCARD_NOTE_CODE:
+                    Toasto.show_toast(requireContext(), getString(R.string.note_discarded), 1, 0);
+                    break;
+                case RequestCodes.CHOOSE_SORT_BY_A_TO_Z:
+                    notes.clear();
+                    notesAdapter.notifyDataSetChanged();
+                    requestNotes(RequestCodes.REQUEST_CODE_VIEW_NOTE_OK, "a_z", false);
+                    break;
+                case RequestCodes.CHOOSE_SORT_BY_Z_TO_A:
+                    notes.clear();
+                    notesAdapter.notifyDataSetChanged();
+                    requestNotes(RequestCodes.REQUEST_CODE_VIEW_NOTE_OK, "z_a", false);
+                    break;
+                case RequestCodes.CHOOSE_SORT_BY_DEFAULT:
+                    notes.clear();
+                    notesAdapter.notifyDataSetChanged();
+                    requestNotes(RequestCodes.REQUEST_CODE_VIEW_NOTE_OK, "note_id", false);
+                    break;
+            }
+        });
+        sharedViewModel.getData().observe(requireActivity(), item -> {
+            Note note = (Note) item;
+            Intent intent = new Intent(requireContext(), AddNoteActivity.class);
+            intent.putExtra("modifier", true);
+            intent.putExtra("note", note);
+            startActivityForResult.launch(intent);
         });
 
         return view;
@@ -128,7 +158,7 @@ public class NotesFragment extends Fragment implements NotesListener,
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        sharedPref = new SharedPref(getContext());
+        sharedPref = new SharedPref(requireContext());
         super.onCreate(savedInstanceState);
     }
 
@@ -145,31 +175,42 @@ public class NotesFragment extends Fragment implements NotesListener,
 
             @Override
             protected List<Note> doInBackground(Void... voids) {
-                return APP_DATABASE.requestDatabase(getContext()).dao().request_notes(sortBy);
+                return APP_DATABASE.requestDatabase(requireContext()).dao().request_notes(sortBy);
             }
 
+            @SuppressLint("NotifyDataSetChanged")
             @Override
             protected void onPostExecute(List<Note> notes_inline) {
                 super.onPostExecute(notes_inline);
-                if (requestCode == REQUEST_CODE_VIEW_NOTE_OK) {
-                    notes.addAll(notes_inline);
-                    notesAdapter.notifyDataSetChanged();
-                } else if (requestCode == REQUEST_CODE_ADD_NOTE_OK) {
-                    notes.add(0, notes_inline.get(0));
-                    notesAdapter.notifyItemInserted(0);
-                    notesRecyclerview.smoothScrollToPosition(0);
-                } else if (requestCode == REQUEST_CODE_UPDATE_NOTE_OK) {
-                    notes.remove(noteClickedPosition);
-                    if (isDeleted) {
-                        notesAdapter.notifyItemRemoved(noteClickedPosition);
-                    } else {
-                        notes.add(noteClickedPosition, notes_inline.get(noteClickedPosition));
-                        notesAdapter.notifyItemChanged(noteClickedPosition);
-                    }
+                switch (requestCode) {
+                    case RequestCodes.REQUEST_CODE_VIEW_NOTE_OK:
+                        notes.addAll(notes_inline);
+                        notesAdapter.notifyDataSetChanged();
+                        break;
+                    case RequestCodes.REQUEST_ARCHIVE_NOTE_CODE:
+                        notes.clear();
+                        notes.addAll(notes_inline);
+                        notesAdapter.notifyDataSetChanged();
+                        break;
+                    case RequestCodes.REQUEST_CODE_ADD_NOTE_OK:
+                        notes.add(0, notes_inline.get(0));
+                        notesAdapter.notifyItemInserted(0);
+                        notesRecyclerview.smoothScrollToPosition(0);
+                        break;
+                    case RequestCodes.REQUEST_CODE_UPDATE_NOTE_OK:
+                        notes.remove(noteClickedPosition);
+                        if (isDeleted) {
+                            notesAdapter.notifyItemRemoved(noteClickedPosition);
+                        } else {
+                            notes.add(noteClickedPosition, notes_inline.get(noteClickedPosition));
+                            notesAdapter.notifyItemChanged(noteClickedPosition);
+                        }
+                        break;
                 }
+
                 if (notesAdapter.getItemCount() == 0) {
                     view.findViewById(R.id.notes_empty_placeholder).setVisibility(View.VISIBLE);
-                    view.findViewById(R.id.notes_empty_placeholder).setOnClickListener(v -> startActivityForResult(new Intent(getContext(), AddNoteActivity.class), REQUEST_CODE_ADD_NOTE_OK));
+                    view.findViewById(R.id.notes_empty_placeholder).setOnClickListener(v -> startActivityForResult.launch(new Intent(requireContext(), AddNoteActivity.class)));
                 } else {
                     view.findViewById(R.id.notes_empty_placeholder).setVisibility(View.GONE);
                 }
@@ -188,6 +229,7 @@ public class NotesFragment extends Fragment implements NotesListener,
                 return APP_DATABASE.requestDatabase(getContext()).dao().request_categories();
             }
 
+            @SuppressLint("NotifyDataSetChanged")
             @Override
             protected void onPostExecute(List<Category> categories_inline) {
                 super.onPostExecute(categories_inline);
@@ -197,46 +239,6 @@ public class NotesFragment extends Fragment implements NotesListener,
 
         }
         new GetCategoriesTask().execute();
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == REQUEST_CODE_ADD_NOTE_OK && resultCode == RESULT_OK) {
-            requestNotes(REQUEST_CODE_ADD_NOTE_OK, "note_id", false);
-        } else if (requestCode == REQUEST_CODE_UPDATE_NOTE_OK && resultCode == RESULT_OK) {
-            if (data != null) {
-                requestNotes(REQUEST_CODE_UPDATE_NOTE_OK, "note_id", data.getBooleanExtra("is_note_removed", false));
-            }
-        } else if (requestCode == NoteActionsBottomSheetModal.REQUEST_DELETE_NOTE_CODE) {
-            requestNotes(REQUEST_CODE_UPDATE_NOTE_OK, "note_id", true);
-            Toasto.show_toast(requireContext(), getString(R.string.note_moved_to_trash), 1, 0);
-        } else if (requestCode == NoteActionsBottomSheetModal.REQUEST_DISCARD_NOTE_CODE) {
-            Toasto.show_toast(requireContext(), getString(R.string.note_discarded), 1, 0);
-        } else if (resultCode == HomeMoreOptionsBottomSheetModal.CHOOSE_OPTION_REQUEST_CODE) {
-            initializeToolbarSelector();
-        } else if (resultCode == HomeMoreOptionsBottomSheetModal.CHOOSE_SORT_BY_A_TO_Z) {
-            notes.clear();
-            notesAdapter.notifyDataSetChanged();
-            requestNotes(REQUEST_CODE_VIEW_NOTE_OK, "a_z", false);
-        } else if (resultCode == HomeMoreOptionsBottomSheetModal.CHOOSE_SORT_BY_Z_TO_A) {
-            notes.clear();
-            notesAdapter.notifyDataSetChanged();
-            requestNotes(REQUEST_CODE_VIEW_NOTE_OK, "z_a", false);
-        } else if (resultCode == HomeMoreOptionsBottomSheetModal.CHOOSE_SORT_BY_DEFAULT) {
-            notes.clear();
-            notesAdapter.notifyDataSetChanged();
-            requestNotes(REQUEST_CODE_VIEW_NOTE_OK, "note_id", false);
-        } else if (requestCode == REQUEST_CODE_UNLOCK_NOTE) {
-            if (data != null) {
-                Note note = (Note) data.getSerializableExtra("data");
-                Intent intent = new Intent(getContext(), AddNoteActivity.class);
-                intent.putExtra("modifier", true);
-                intent.putExtra("note", note);
-                startActivityForResult(intent, REQUEST_CODE_UPDATE_NOTE_OK);
-            }
-        }
     }
 
     @SuppressLint("SetTextI18n")
@@ -317,22 +319,21 @@ public class NotesFragment extends Fragment implements NotesListener,
                 noteClickedPosition = position;
 
                 if (sharedPref.loadNotePinCode() == 0) {
-                    Intent intent = new Intent(getContext(), AddNoteActivity.class);
+                    Intent intent = new Intent(requireContext(), AddNoteActivity.class);
                     intent.putExtra("modifier", true);
                     intent.putExtra("note", note);
-                    startActivityForResult(intent, REQUEST_CODE_UPDATE_NOTE_OK);
+                    startActivityForResult.launch(intent);
                 } else {
                     if (note.isNote_locked()) {
                         bundle.putSerializable("data", note);
                         PasswordBottomSheetModal passwordBottomSheetModal = new PasswordBottomSheetModal();
                         passwordBottomSheetModal.setArguments(bundle);
-                        passwordBottomSheetModal.setTargetFragment(NotesFragment.this, REQUEST_CODE_UNLOCK_NOTE);
-                        passwordBottomSheetModal.show(requireFragmentManager(), "TAG");
+                        passwordBottomSheetModal.show(getChildFragmentManager(), "TAG");
                     } else {
-                        Intent intent = new Intent(getContext(), AddNoteActivity.class);
+                        Intent intent = new Intent(requireContext(), AddNoteActivity.class);
                         intent.putExtra("modifier", true);
                         intent.putExtra("note", note);
-                        startActivityForResult(intent, REQUEST_CODE_UPDATE_NOTE_OK);
+                        startActivityForResult.launch(intent);
                     }
                 }
             }
@@ -347,8 +348,7 @@ public class NotesFragment extends Fragment implements NotesListener,
 
         NoteActionsBottomSheetModal noteActionsBottomSheetModal = new NoteActionsBottomSheetModal();
         noteActionsBottomSheetModal.setArguments(bundle);
-        noteActionsBottomSheetModal.setTargetFragment(this, 3);
-        noteActionsBottomSheetModal.show(requireFragmentManager(), "TAG");
+        noteActionsBottomSheetModal.show(getChildFragmentManager(), "TAG");
     }
 
     @SuppressLint("SetTextI18n")
@@ -366,9 +366,39 @@ public class NotesFragment extends Fragment implements NotesListener,
     public void onCategoryClicked(Category category, int position) {
         noteClickedPosition = position;
 
-        Intent intent = new Intent(getContext(), FilteredNotesActivity.class);
+        Intent intent = new Intent(requireContext(), FilteredNotesActivity.class);
         intent.putExtra("identifier", category.getCategory_id());
         intent.putExtra("title", category.getCategory_title());
         startActivity(intent);
     }
+
+    @SuppressLint("NotifyDataSetChanged")
+    ActivityResultLauncher<Intent> startActivityForResult = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+        if (result != null) {
+            switch (result.getResultCode()) {
+                case RequestCodes.REQUEST_CODE_ADD_NOTE_OK:
+                    requestNotes(RequestCodes.REQUEST_CODE_ADD_NOTE_OK, "note_id", false);
+                    break;
+                case RequestCodes.REQUEST_CODE_UPDATE_NOTE_OK:
+                    if (result.getData() != null) {
+                        requestNotes(RequestCodes.REQUEST_CODE_UPDATE_NOTE_OK, "note_id", result.getData().getBooleanExtra("is_note_removed", false));
+                    }
+                    break;
+                case RequestCodes.REQUEST_ARCHIVE_NOTE_CODE:
+                    requestNotes(RequestCodes.REQUEST_ARCHIVE_NOTE_CODE, "note_id", false);
+                    Toasto.show_toast(requireContext(), getString(R.string.note_archived), 1, 0);
+                    break;
+                case RequestCodes.REQUEST_DELETE_NOTE_CODE:
+                    requestNotes(RequestCodes.REQUEST_CODE_UPDATE_NOTE_OK, "note_id", true);
+                    Toasto.show_toast(requireContext(), getString(R.string.note_moved_to_trash), 1, 0);
+                    break;
+                case RequestCodes.REQUEST_DISCARD_NOTE_CODE:
+                    Toasto.show_toast(requireContext(), getString(R.string.note_discarded), 1, 0);
+                    break;
+                case RequestCodes.CHOOSE_OPTION_REQUEST_CODE:
+                    initializeToolbarSelector();
+                    break;
+            }
+        }
+    });
 }

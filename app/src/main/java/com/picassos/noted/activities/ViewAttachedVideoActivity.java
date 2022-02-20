@@ -1,7 +1,6 @@
 package com.picassos.noted.activities;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.net.Uri;
@@ -198,8 +197,7 @@ public class ViewAttachedVideoActivity extends AppCompatActivity {
         findViewById(R.id.note_video_remove).setOnClickListener(v -> {
             if (getIntent().getStringExtra("video_type") == null) {
                 Intent intent = new Intent();
-                intent.putExtra("request", RequestCodes.REQUEST_REMOVE_NOTE_VIDEO_CODE);
-                setResult(Activity.RESULT_OK, intent);
+                setResult( RequestCodes.REQUEST_REMOVE_NOTE_VIDEO_CODE, intent);
             }
             finish();
         });

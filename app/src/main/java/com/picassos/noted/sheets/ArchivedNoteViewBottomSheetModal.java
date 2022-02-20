@@ -18,6 +18,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ShareCompat;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.makeramen.roundedimageview.RoundedImageView;
@@ -25,12 +26,12 @@ import com.picassos.noted.R;
 import com.picassos.noted.activities.ViewAttachedImageActivity;
 import com.picassos.noted.activities.ViewAttachedVideoActivity;
 import com.picassos.noted.entities.ArchiveNote;
+import com.picassos.noted.models.SharedViewModel;
 
 public class ArchivedNoteViewBottomSheetModal extends BottomSheetDialogFragment {
+    SharedViewModel sharedViewModel;
 
     ArchiveNote presetNote;
-
-    private static final int REQUEST_VIEW_NOTE_VIDEO = 6;
 
     public ArchivedNoteViewBottomSheetModal() {
 
@@ -42,7 +43,7 @@ public class ArchivedNoteViewBottomSheetModal extends BottomSheetDialogFragment 
         View view = inflater.inflate(R.layout.archived_note_view_bottom_sheet_modal, container, false);
 
         // get preset note
-        presetNote = (ArchiveNote) getArguments().getSerializable("archive_note_data");
+        presetNote = (ArchiveNote) requireArguments().getSerializable("archive_note_data");
 
         /*
          * set note data like note title,
@@ -62,7 +63,7 @@ public class ArchivedNoteViewBottomSheetModal extends BottomSheetDialogFragment 
         if (presetNote.getNote_image_path() != null && !presetNote.getNote_image_path().trim().isEmpty()) {
             noteImage.setImageBitmap(BitmapFactory.decodeFile(presetNote.getNote_image_path()));
             noteImage.setOnClickListener(v -> {
-                Intent intent = new Intent(getContext(), ViewAttachedImageActivity.class);
+                Intent intent = new Intent(requireContext(), ViewAttachedImageActivity.class);
                 intent.putExtra("image_path", presetNote.getNote_image_path());
                 intent.putExtra("image_type", "view");
                 startActivity(intent);
@@ -70,7 +71,8 @@ public class ArchivedNoteViewBottomSheetModal extends BottomSheetDialogFragment 
             // share note image
             view.findViewById(R.id.note_image_share).setOnClickListener(v -> {
                 if (presetNote.getNote_image_uri() != null && !TextUtils.isEmpty(presetNote.getNote_image_uri())) {
-                    Intent share = ShareCompat.IntentBuilder.from(getActivity())
+                    // TODO: Update Share Image Deprecated
+                    Intent share = ShareCompat.IntentBuilder.from(requireActivity())
                             .setStream(Uri.parse(presetNote.getNote_image_uri()))
                             .setType("text/html")
                             .getIntent()
@@ -92,10 +94,10 @@ public class ArchivedNoteViewBottomSheetModal extends BottomSheetDialogFragment 
             Bitmap video_thumbnail = ThumbnailUtils.createVideoThumbnail(presetNote.getNote_video_path(), MediaStore.Video.Thumbnails.FULL_SCREEN_KIND);
             noteVideo.setImageBitmap(video_thumbnail);
             noteVideo.setOnClickListener(v -> {
-                Intent intent = new Intent(getContext(), ViewAttachedVideoActivity.class);
+                Intent intent = new Intent(requireContext(), ViewAttachedVideoActivity.class);
                 intent.putExtra("video_path", presetNote.getNote_video_path());
                 intent.putExtra("video_type", "view");
-                startActivityForResult(intent, REQUEST_VIEW_NOTE_VIDEO);
+                startActivity(intent);
             });
             noteVideo.setVisibility(View.VISIBLE);
             view.findViewById(R.id.note_video_container).setVisibility(View.VISIBLE);
@@ -128,4 +130,10 @@ public class ArchivedNoteViewBottomSheetModal extends BottomSheetDialogFragment 
         super.onCreate(savedInstanceState);
     }
 
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        sharedViewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
+    }
 }

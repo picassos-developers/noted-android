@@ -18,6 +18,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.picassos.noted.R;
 import com.picassos.noted.activities.EditCategoryActivity;
 import com.picassos.noted.adapters.ChooseCategoryAdapter;
+import com.picassos.noted.constants.RequestCodes;
 import com.picassos.noted.databases.APP_DATABASE;
 import com.picassos.noted.entities.Category;
 import com.picassos.noted.listeners.ChooseCategoryListener;
@@ -92,6 +93,7 @@ public class CategoriesBottomSheetModal extends BottomSheetDialogFragment implem
                 return APP_DATABASE.requestDatabase(getContext()).dao().request_categories();
             }
 
+            @SuppressLint("NotifyDataSetChanged")
             @Override
             protected void onPostExecute(List<Category> categories_inline) {
                 super.onPostExecute(categories_inline);
@@ -105,9 +107,7 @@ public class CategoriesBottomSheetModal extends BottomSheetDialogFragment implem
 
     @Override
     public void onCategoryClicked(Category category, int position) {
-        int REQUEST_CHOOSE_CATEGORY_CODE = 5;
-        onChooseListener.onChooseListener(REQUEST_CHOOSE_CATEGORY_CODE, category);
-
+        onChooseListener.onChooseListener(RequestCodes.REQUEST_CHOOSE_CATEGORY_CODE, category);
         dismiss();
     }
 }

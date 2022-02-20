@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.picassos.noted.R;
 import com.picassos.noted.activities.AddNoteActivity;
 import com.picassos.noted.adapters.ReminderNotesAdapter;
+import com.picassos.noted.constants.RequestCodes;
 import com.picassos.noted.databases.APP_DATABASE;
 import com.picassos.noted.entities.Note;
 import com.picassos.noted.listeners.NotesListener;
@@ -173,7 +174,7 @@ public class RemindersFragment extends Fragment implements NotesListener {
             if (data != null) {
                 requestReminderNotes(REQUEST_CODE_UPDATE_NOTE_OK, data.getBooleanExtra("is_note_removed", false));
             }
-        } else if (requestCode == NoteActionsBottomSheetModal.REQUEST_DELETE_NOTE_CODE) {
+        } else if (requestCode == RequestCodes.REQUEST_DELETE_NOTE_CODE) {
             requestReminderNotes(REQUEST_CODE_UPDATE_NOTE_OK, true);
             Toasto.show_toast(requireContext(), getString(R.string.note_moved_to_trash), 1, 0);
         } else if (requestCode == REQUEST_CODE_UNLOCK_NOTE) {

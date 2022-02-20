@@ -107,7 +107,10 @@ public class Helper {
         view.setBackgroundTintList(AppCompatResources.getColorStateList(context, resourceId));
     }
 
-
+    /**
+     * hide bottom view with animation
+     * @param view for view
+     */
     public static void hide_bottom(View view) {
         int moveY = 2 * view.getHeight();
         view.animate()
@@ -116,6 +119,10 @@ public class Helper {
                 .start();
     }
 
+    /**
+     * show bottom view with animation
+     * @param view for view
+     */
     public static void show_bottom(View view) {
         view.animate()
                 .translationY(0)

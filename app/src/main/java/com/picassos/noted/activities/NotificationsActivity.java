@@ -50,9 +50,8 @@ public class NotificationsActivity extends AppCompatActivity implements Notifica
         // initialize database
         dao = APP_DATABASE.requestDatabase(this).dao();
 
-        // return back and finish activity
-        ImageView goBack = findViewById(R.id.go_back);
-        goBack.setOnClickListener(v -> finish());
+        // finish activity
+        findViewById(R.id.go_back).setOnClickListener(v -> finish());
 
         // delete all notifications
         ImageView deleteAllNotifications = findViewById(R.id.delete_all_notifications);

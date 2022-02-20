@@ -1,7 +1,6 @@
 package com.picassos.noted.fragments.home;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -9,20 +8,25 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.cardview.widget.CardView;
 import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.picassos.noted.R;
 import com.picassos.noted.activities.ViewTodoActivity;
 import com.picassos.noted.adapters.TodosAdapter;
+import com.picassos.noted.constants.RequestCodes;
 import com.picassos.noted.databases.APP_DATABASE;
 import com.picassos.noted.entities.Todo;
 import com.picassos.noted.listeners.TodosListener;
+import com.picassos.noted.models.SharedViewModel;
 import com.picassos.noted.sheets.AddTodoBottomSheetModal;
 import com.picassos.noted.sheets.TodoActionsBottomSheetModal;
 import com.picassos.noted.sheets.TodoListsBottomSheetModal;
@@ -33,6 +37,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TodosFragment extends Fragment implements TodosListener {
+    SharedViewModel sharedViewModel;
 
     // Bundle
     Bundle bundle;
@@ -42,13 +47,6 @@ public class TodosFragment extends Fragment implements TodosListener {
 
     private List<Todo> todos;
     private TodosAdapter todosAdapter;
-
-    // Request Codes
-    private final static int REQUEST_ADD_TODO_CODE = 1;
-    private final static int REQUEST_VIEW_TODO_CODE = 2;
-    private final static int REQUEST_ACTION_TODO_CODE = 3;
-    private final static int REQUEST_MORE_OPTIONS_CODE = 4;
-    private final static int REQUEST_TODO_LISTS_CODE = 5;
 
     boolean navigationHide = false;
 
@@ -65,29 +63,26 @@ public class TodosFragment extends Fragment implements TodosListener {
         addTodo.setOnClickListener(v -> {
             AddTodoBottomSheetModal addTodoBottomSheetModal = new AddTodoBottomSheetModal();
             addTodoBottomSheetModal.setArguments(bundle);
-            addTodoBottomSheetModal.setTargetFragment(this, REQUEST_ADD_TODO_CODE);
-            addTodoBottomSheetModal.show(requireFragmentManager(), "TAG");
+            addTodoBottomSheetModal.show(getChildFragmentManager(), "TAG");
         });
 
         // more options
         CardView moreOptions = view.findViewById(R.id.more_options);
         moreOptions.setOnClickListener(v -> {
             TodoMoreOptionsBottomSheetModal todoMoreOptionsBottomSheetModal = new TodoMoreOptionsBottomSheetModal();
-            todoMoreOptionsBottomSheetModal.setTargetFragment(this, REQUEST_MORE_OPTIONS_CODE);
-            todoMoreOptionsBottomSheetModal.show(requireFragmentManager(), "TAG");
+            todoMoreOptionsBottomSheetModal.show(getChildFragmentManager(), "TAG");
         });
 
         // to-do lists
         CardView todoLists = view.findViewById(R.id.todo_lists);
         todoLists.setOnClickListener(v -> {
             TodoListsBottomSheetModal todoListsBottomSheetModal = new TodoListsBottomSheetModal();
-            todoListsBottomSheetModal.setTargetFragment(this, REQUEST_TODO_LISTS_CODE);
-            todoListsBottomSheetModal.show(requireFragmentManager(), "TAG");
+            todoListsBottomSheetModal.show(getChildFragmentManager(), "TAG");
         });
 
         // to-dos recyclerview
         RecyclerView todosRecyclerview = view.findViewById(R.id.todos_recyclerview);
-        todosRecyclerview.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
+        todosRecyclerview.setLayoutManager(new LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false));
 
         // to-dos list, adapter
         todos = new ArrayList<>();
@@ -112,6 +107,23 @@ public class TodosFragment extends Fragment implements TodosListener {
             }
         });
 
+        sharedViewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
+        sharedViewModel.getRequestCode().observe(requireActivity(), item -> {
+            switch (item) {
+                case RequestCodes.REQUEST_ACTION_TODO_CODE:
+                case RequestCodes.REQUEST_DELETE_ALL_COMPLETED_TASKS_CODE:
+                case RequestCodes.CHOOSE_SORT_BY_DEFAULT:
+                    refreshTodos("todo_id");
+                    break;
+                case RequestCodes.CHOOSE_SORT_BY_A_TO_Z:
+                    refreshTodos("a_z");
+                    break;
+                case RequestCodes.CHOOSE_SORT_BY_Z_TO_A:
+                    refreshTodos("z_a");
+                    break;
+            }
+        });
+
         return view;
     }
 
@@ -133,6 +145,7 @@ public class TodosFragment extends Fragment implements TodosListener {
                 return APP_DATABASE.requestDatabase(getContext()).dao().request_todos(sortBy);
             }
 
+            @SuppressLint("NotifyDataSetChanged")
             @Override
             protected void onPostExecute(List<Todo> todos_inline) {
                 super.onPostExecute(todos_inline);
@@ -143,8 +156,7 @@ public class TodosFragment extends Fragment implements TodosListener {
                     view.findViewById(R.id.todos_empty_placeholder).setOnClickListener(v -> {
                         AddTodoBottomSheetModal addTodoBottomSheetModal = new AddTodoBottomSheetModal();
                         addTodoBottomSheetModal.setArguments(bundle);
-                        addTodoBottomSheetModal.setTargetFragment(TodosFragment.this, REQUEST_ADD_TODO_CODE);
-                        addTodoBottomSheetModal.show(requireFragmentManager(), "TAG");
+                        addTodoBottomSheetModal.show(getChildFragmentManager(), "TAG");
                     });
                 } else {
                     view.findViewById(R.id.todos_empty_placeholder).setVisibility(View.GONE);
@@ -157,10 +169,10 @@ public class TodosFragment extends Fragment implements TodosListener {
 
     @Override
     public void onTodoClicked(Todo todo, int position) {
-        Intent intent = new Intent(getContext(), ViewTodoActivity.class);
+        Intent intent = new Intent(requireContext(), ViewTodoActivity.class);
         intent.putExtra("modifier", true);
         intent.putExtra("todo", todo);
-        startActivityForResult(intent, REQUEST_VIEW_TODO_CODE);
+        startActivityForResult.launch(intent);
     }
 
     @Override
@@ -168,8 +180,7 @@ public class TodosFragment extends Fragment implements TodosListener {
         bundle.putSerializable("todo_data", todo);
         TodoActionsBottomSheetModal todoActionsBottomSheetModal = new TodoActionsBottomSheetModal();
         todoActionsBottomSheetModal.setArguments(bundle);
-        todoActionsBottomSheetModal.setTargetFragment(this, REQUEST_ACTION_TODO_CODE);
-        todoActionsBottomSheetModal.show(requireFragmentManager(), "TAG");
+        todoActionsBottomSheetModal.show(getChildFragmentManager(), "TAG");
     }
 
     @Override
@@ -200,56 +211,19 @@ public class TodosFragment extends Fragment implements TodosListener {
     /**
      * refresh todos list
      */
+    @SuppressLint("NotifyDataSetChanged")
     private void refreshTodos(String sortBy) {
         todos.clear();
         todosAdapter.notifyDataSetChanged();
         requestTodos(sortBy);
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        switch (requestCode) {
-            case REQUEST_ADD_TODO_CODE:
-                if (resultCode == Activity.RESULT_OK) {
-                    refreshTodos("todo_id");
-                }
-                break;
-            case REQUEST_VIEW_TODO_CODE:
-                if (resultCode == Activity.RESULT_OK) {
-                    if (data != null) {
-                        if (data.getIntExtra("requestCode", 0) == 1
-                                || data.getIntExtra("requestCode", 0) == 2
-                                || data.getIntExtra("requestCode", 0) == 3) {
-                            refreshTodos("todo_id");
-                        }
-                    }
-                }
-                break;
-            case REQUEST_ACTION_TODO_CODE:
-                if (resultCode == TodoActionsBottomSheetModal.REQUEST_DELETE_TODO_CODE){
-                    refreshTodos("todo_id");
-                }
-                break;
-            case REQUEST_MORE_OPTIONS_CODE:
-                switch (resultCode) {
-                    case TodoMoreOptionsBottomSheetModal.REQUEST_DELETE_ALL_COMPLETED_TASKS_CODE:
-                    case TodoMoreOptionsBottomSheetModal.CHOOSE_SORT_BY_DEFAULT:
-                        refreshTodos("todo_id");
-                        break;
-                    case TodoMoreOptionsBottomSheetModal.CHOOSE_SORT_BY_A_TO_Z:
-                        refreshTodos("a_z");
-                        break;
-                    case TodoMoreOptionsBottomSheetModal.CHOOSE_SORT_BY_Z_TO_A:
-                        refreshTodos("z_a");
-                        break;
-                }
-                break;
-            case REQUEST_TODO_LISTS_CODE:
-                if (resultCode == TodoListsBottomSheetModal.REQUEST_UPDATE_LIST_CODE) {
-                    refreshTodos("todo_id");
-                }
+    @SuppressLint("NotifyDataSetChanged")
+    ActivityResultLauncher<Intent> startActivityForResult = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+        if (result != null) {
+            if (result.getResultCode() == RequestCodes.REQUEST_ACTION_TODO_CODE) {
+                refreshTodos("todo_id");
+            }
         }
-    }
+    });
 }

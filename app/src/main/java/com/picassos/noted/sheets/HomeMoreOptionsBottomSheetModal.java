@@ -1,7 +1,6 @@
 package com.picassos.noted.sheets;
 
 import android.app.Dialog;
-import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -14,17 +13,15 @@ import android.widget.LinearLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.picassos.noted.R;
-import java.util.Objects;
+import com.picassos.noted.constants.RequestCodes;
+import com.picassos.noted.models.SharedViewModel;
 
 public class HomeMoreOptionsBottomSheetModal extends BottomSheetDialogFragment {
-
-    public static final int CHOOSE_OPTION_REQUEST_CODE = 1;
-    public static final int CHOOSE_SORT_BY_A_TO_Z = 2;
-    public static final int CHOOSE_SORT_BY_Z_TO_A = 3;
-    public static final int CHOOSE_SORT_BY_DEFAULT = 4;
+    SharedViewModel sharedViewModel;
 
     public HomeMoreOptionsBottomSheetModal() {
 
@@ -37,7 +34,7 @@ public class HomeMoreOptionsBottomSheetModal extends BottomSheetDialogFragment {
 
         // select notes
         LinearLayout selectNotes = view.findViewById(R.id.select_notes);
-        selectNotes.setOnClickListener(v -> send_result(CHOOSE_OPTION_REQUEST_CODE));
+        selectNotes.setOnClickListener(v -> send_result(RequestCodes.CHOOSE_OPTION_REQUEST_CODE));
 
         // sort notes
         LinearLayout sortNotes = view.findViewById(R.id.sort_notes);
@@ -55,21 +52,21 @@ public class HomeMoreOptionsBottomSheetModal extends BottomSheetDialogFragment {
             // sort by default
             LinearLayout sortDefault = sortByDialog.findViewById(R.id.sort_by_default);
             sortDefault.setOnClickListener(v1 -> {
-                send_result(CHOOSE_SORT_BY_DEFAULT);
+                send_result(RequestCodes.CHOOSE_SORT_BY_DEFAULT);
                 sortByDialog.dismiss();
             });
 
             // sort by name a - z
             LinearLayout aToZ = sortByDialog.findViewById(R.id.sort_a_to_z);
             aToZ.setOnClickListener(v2 -> {
-                send_result(CHOOSE_SORT_BY_A_TO_Z);
+                send_result(RequestCodes.CHOOSE_SORT_BY_A_TO_Z);
                 sortByDialog.dismiss();
             });
 
             // sort by name z - a
             LinearLayout zToA = sortByDialog.findViewById(R.id.sort_z_to_a);
             zToA.setOnClickListener(v3 -> {
-                send_result(CHOOSE_SORT_BY_Z_TO_A);
+                send_result(RequestCodes.CHOOSE_SORT_BY_Z_TO_A);
                 sortByDialog.dismiss();
             });
 
@@ -96,10 +93,13 @@ public class HomeMoreOptionsBottomSheetModal extends BottomSheetDialogFragment {
         super.onCreate(savedInstanceState);
     }
 
-    private void send_result(int RESULT_OK) {
-        Intent intent = new Intent();
-        Objects.requireNonNull(getTargetFragment()).onActivityResult(getTargetRequestCode(), RESULT_OK, intent);
-        dismiss();
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        sharedViewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
     }
 
+    private void send_result(int RESULT_OK) {
+        sharedViewModel.setRequestCode(RESULT_OK);
+    }
 }

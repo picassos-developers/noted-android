@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.picassos.noted.R;
 import com.picassos.noted.adapters.TodoListAdapter;
+import com.picassos.noted.constants.RequestCodes;
 import com.picassos.noted.databases.APP_DATABASE;
 import com.picassos.noted.entities.TodosList;
 import com.picassos.noted.listeners.TodoListListener;
@@ -29,9 +30,6 @@ public class TodoMoveToBottomSheetModal extends BottomSheetDialogFragment implem
     public interface OnMoveListener {
         void onMoveListener(int requestCode, int identifier);
     }
-
-    // Request Codes
-    public static int REQUEST_MOVE_TASK_CODE = 1;
 
     OnMoveListener onMoveListener;
 
@@ -89,6 +87,7 @@ public class TodoMoveToBottomSheetModal extends BottomSheetDialogFragment implem
                 return APP_DATABASE.requestDatabase(getContext()).dao().request_todos_lists();
             }
 
+            @SuppressLint("NotifyDataSetChanged")
             @Override
             protected void onPostExecute(List<TodosList> todo_list_inline) {
                 super.onPostExecute(todo_list_inline);
@@ -102,7 +101,7 @@ public class TodoMoveToBottomSheetModal extends BottomSheetDialogFragment implem
 
     @Override
     public void onTodoListClicked(TodosList todosList, int position) {
-        onMoveListener.onMoveListener(REQUEST_MOVE_TASK_CODE, todosList.getTodo_list_identifier());
+        onMoveListener.onMoveListener(RequestCodes.REQUEST_MOVE_TASK_CODE, todosList.getTodo_list_identifier());
         Toasto.show_toast(requireContext(), getString(R.string.todo_moved_to) + " " + todosList.getTodo_list_title(), 0, 0);
         dismiss();
     }

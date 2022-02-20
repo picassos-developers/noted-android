@@ -12,6 +12,7 @@ import android.widget.Button;
 
 import com.picassos.noted.R;
 import com.picassos.noted.adapters.CategoriesAdapter;
+import com.picassos.noted.constants.RequestCodes;
 import com.picassos.noted.databases.APP_DATABASE;
 import com.picassos.noted.entities.Category;
 import com.picassos.noted.listeners.CategoriesListener;
@@ -145,28 +146,24 @@ public class EditCategoryActivity extends AppCompatActivity implements Categorie
     @SuppressLint("NotifyDataSetChanged")
     @Override
     public void onAddListener(int requestCode) {
-        int REQUEST_ADD_CATEGORY_CODE = 3;
-
-        if (requestCode == REQUEST_ADD_CATEGORY_CODE) {
+        if (requestCode == RequestCodes.REQUEST_ADD_CATEGORY_CODE) {
             categories.clear();
             categoriesAdapter.notifyDataSetChanged();
             requestCategories();
 
-            Toasto.show_toast(this, getString(R.string.category_added), 0, 0);
+            Toasto.show_toast(this, getString(R.string.category_added), 1, 0);
         }
     }
 
     @SuppressLint("NotifyDataSetChanged")
     @Override
     public void onEditListener(int requestCode) {
-        int REQUEST_EDIT_CATEGORY_CODE = 4;
-
-        if (requestCode == REQUEST_EDIT_CATEGORY_CODE) {
+        if (requestCode == RequestCodes.REQUEST_EDIT_CATEGORY_CODE) {
             categories.clear();
             categoriesAdapter.notifyDataSetChanged();
             requestCategories();
 
-            Toasto.show_toast(this, getString(R.string.category_edited), 0, 0);
+            Toasto.show_toast(this, getString(R.string.category_edited), 1, 0);
         }
     }
 

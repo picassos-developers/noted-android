@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.lifecycle.ViewModelProvider;
 
 import android.annotation.SuppressLint;
 import android.content.ActivityNotFoundException;
@@ -23,16 +24,19 @@ import android.widget.TextView;
 
 import com.google.android.material.navigation.NavigationView;
 import com.picassos.noted.R;
+import com.picassos.noted.constants.Constants;
 import com.picassos.noted.fragments.ArchiveFragment;
 import com.picassos.noted.fragments.HomeFragment;
 import com.picassos.noted.fragments.RemindersFragment;
 import com.picassos.noted.fragments.TrashFragment;
+import com.picassos.noted.models.SharedViewModel;
 import com.picassos.noted.sheets.GoogleAdmobNativeAdBottomSheetModal;
 import com.picassos.noted.utils.Helper;
 
 import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+    SharedViewModel sharedViewModel;
 
     // Drawer Layout
     private DrawerLayout drawer;
@@ -59,6 +63,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Helper.screen_state(this);
 
         setContentView(R.layout.activity_main);
+
+        sharedViewModel = new ViewModelProvider(this).get(SharedViewModel.class);
 
         // initialize drawer
         drawer = findViewById(R.id.drawer_layout);
@@ -120,15 +126,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         switch (item.getItemId()) {
             case R.id.menu_home:
+                sharedViewModel.setRequestCode(0);
                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new HomeFragment()).commit();
                 break;
             case R.id.menu_reminders:
+                sharedViewModel.setRequestCode(0);
                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new RemindersFragment()).commit();
                 break;
             case R.id.menu_archive:
+                sharedViewModel.setRequestCode(0);
                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new ArchiveFragment()).commit();
                 break;
             case R.id.menu_trash:
+                sharedViewModel.setRequestCode(0);
                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new TrashFragment()).commit();
                 enableDeleteAll();
                 break;
@@ -185,8 +195,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-            GoogleAdmobNativeAdBottomSheetModal googleAdmobNativeAdBottomSheetModal = new GoogleAdmobNativeAdBottomSheetModal();
-            googleAdmobNativeAdBottomSheetModal.show(getSupportFragmentManager(), "TAG");
+            if (Constants.ENABLE_GOOGLE_ADMOB_ADS) {
+                GoogleAdmobNativeAdBottomSheetModal googleAdmobNativeAdBottomSheetModal = new GoogleAdmobNativeAdBottomSheetModal();
+                googleAdmobNativeAdBottomSheetModal.show(getSupportFragmentManager(), "TAG");
+            } else {
+                finishAffinity();
+            }
         }
 
     }

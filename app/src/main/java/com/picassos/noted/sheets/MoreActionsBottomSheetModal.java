@@ -11,7 +11,6 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.speech.RecognizerIntent;
@@ -21,9 +20,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.cardview.widget.CardView;
@@ -32,6 +32,7 @@ import androidx.core.app.ActivityCompat;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.picassos.noted.R;
 import com.picassos.noted.activities.CreatePinActivity;
+import com.picassos.noted.constants.RequestCodes;
 import com.picassos.noted.databases.APP_DATABASE;
 import com.picassos.noted.entities.ArchiveNote;
 import com.picassos.noted.entities.Note;
@@ -40,13 +41,9 @@ import com.picassos.noted.sharedPreferences.SharedPref;
 import com.picassos.noted.utils.Toasto;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Objects;
-
-import static android.app.Activity.RESULT_OK;
 
 public class MoreActionsBottomSheetModal extends BottomSheetDialogFragment {
 
@@ -63,22 +60,19 @@ public class MoreActionsBottomSheetModal extends BottomSheetDialogFragment {
     }
 
     public interface OnSpeechInputListener {
-        void onSpeechInputListener(int requestCode, String text);
+        void onSpeechInputListener(String text);
     }
 
-    private final int REQUEST_DELETE_NOTE_CODE = 3;
-    private final int REQUEST_DISCARD_NOTE_CODE = 4;
-    public static final int REQUEST_LOCK_NOTE_CODE = 5;
-    public static final int REQUEST_UNLOCK_NOTE_CODE = 6;
-    private final int REQUEST_SET_PIN_CODE = 6;
-    private final int REQUEST_CODE_TEXT_TO_SPEECH = 7;
-    public static final int REQUEST_SPEECH_INPUT_CODE = 8;
+    public interface OnArchiveListener {
+        void onArchiveListener(int requestCode);
+    }
 
     private Note note;
 
     OnDeleteListener onDeleteListener;
     OnLockListener onLockListener;
     OnSpeechInputListener onSpeechInputListener;
+    OnArchiveListener onArchiveListener;
 
     public MoreActionsBottomSheetModal() {
 
@@ -104,6 +98,12 @@ public class MoreActionsBottomSheetModal extends BottomSheetDialogFragment {
         } catch (final ClassCastException e) {
             throw new ClassCastException(context.toString() + " must implement onSpeechInputListener");
         }
+
+        try {
+            onArchiveListener = (OnArchiveListener) context;
+        } catch (final ClassCastException e) {
+            throw new ClassCastException(context.toString() + " must implement onArchiveListener");
+        }
     }
 
     @Nullable
@@ -114,25 +114,24 @@ public class MoreActionsBottomSheetModal extends BottomSheetDialogFragment {
         note = (Note) requireArguments().getSerializable("note_data");
 
         // delete note
-        LinearLayout deleteNote = view.findViewById(R.id.delete_note);
-        deleteNote.setOnClickListener(v -> requestPresetTrashNote());
+        view.findViewById(R.id.delete_note).setOnClickListener(v -> requestPresetTrashNote());
 
         // lock note
-        LinearLayout lockNote = view.findViewById(R.id.lock_note);
-        lockNote.setOnClickListener(v -> {
+        view.findViewById(R.id.lock_note).setOnClickListener(v -> {
             if (sharedPref.loadNotePinCode() == 0) {
                 // no password pin set
-                startActivityForResult(new Intent(getContext(), CreatePinActivity.class), REQUEST_SET_PIN_CODE);
+                Intent intent = new Intent(requireContext(), CreatePinActivity.class);
+                startActivityForResult.launch(intent);
             } else {
                 if (note != null) {
                     if (note.isNote_locked()) {
                         // set password and lock note
                         Toasto.show_toast(requireContext(), getString(R.string.note_unlocked), 0, 0);
-                        onLockListener.onLockListener(REQUEST_UNLOCK_NOTE_CODE);
+                        onLockListener.onLockListener(RequestCodes.REQUEST_UNLOCK_NOTE_CODE);
                     } else {
                         // set password and lock note
                         Toasto.show_toast(requireContext(), getString(R.string.note_locked), 0, 0);
-                        onLockListener.onLockListener(REQUEST_LOCK_NOTE_CODE);
+                        onLockListener.onLockListener(RequestCodes.REQUEST_LOCK_NOTE_CODE);
                     }
                     dismiss();
                 } else {
@@ -152,8 +151,7 @@ public class MoreActionsBottomSheetModal extends BottomSheetDialogFragment {
         }
 
         // share note
-        LinearLayout shareNote = view.findViewById(R.id.share_note);
-        shareNote.setOnClickListener(v -> {
+        view.findViewById(R.id.share_note).setOnClickListener(v -> {
             if (note != null) {
                 Intent share = new Intent(Intent.ACTION_SEND);
                 share.setType("text/plain");
@@ -165,8 +163,7 @@ public class MoreActionsBottomSheetModal extends BottomSheetDialogFragment {
         });
 
         // archive note
-        LinearLayout archiveNote = view.findViewById(R.id.archive_note);
-        archiveNote.setOnClickListener(v -> {
+        view.findViewById(R.id.archive_note).setOnClickListener(v -> {
             if (note != null) {
                 requestArchiveNote();
             } else {
@@ -175,18 +172,16 @@ public class MoreActionsBottomSheetModal extends BottomSheetDialogFragment {
         });
 
         // reader mode
-        LinearLayout readerMode = view.findViewById(R.id.reader_mode);
-        readerMode.setOnClickListener(v -> {
+        view.findViewById(R.id.reader_mode).setOnClickListener(v -> {
             if (note != null) {
                 showReaderModeDialog();
             } else {
-                Toasto.show_toast(requireContext(), getString(R.string.save_note_before_open_reader_mode), 1, 2);
+                Toasto.show_toast(requireContext(), getString(R.string.please_save_your_note_first), 1, 2);
             }
         });
 
         // copy note to clipboard
-        LinearLayout copyToClipBoard = view.findViewById(R.id.copy_to_clipboard);
-        copyToClipBoard.setOnClickListener(v -> {
+        view.findViewById(R.id.copy_to_clipboard).setOnClickListener(v -> {
             if (note != null) {
                 // get note details
                 String note_title = note.getNote_title();
@@ -195,7 +190,7 @@ public class MoreActionsBottomSheetModal extends BottomSheetDialogFragment {
                 // format note
                 String note_text = "Note title: " + note_title + "\n\nNote subtitle: " + note_subtitle + "\n\nNote description: " + note_description;
                 // copy to clipboard
-                ClipboardManager clipboard = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
+                ClipboardManager clipboard = (ClipboardManager) requireContext().getSystemService(Context.CLIPBOARD_SERVICE);
                 ClipData data = ClipData.newPlainText("Copy Note", note_text);
                 clipboard.setPrimaryClip(data);
                 Toasto.show_toast(requireContext(), getString(R.string.copied_to_clipboard), 0, 0);
@@ -207,18 +202,16 @@ public class MoreActionsBottomSheetModal extends BottomSheetDialogFragment {
         });
 
         // export note as
-        LinearLayout exportNoteAs = view.findViewById(R.id.export_note_as);
-        exportNoteAs.setOnClickListener(v -> {
+        view.findViewById(R.id.export_note_as).setOnClickListener(v -> {
             if (note != null) {
                 showExportAsDialog();
             } else {
-                Toasto.show_toast(requireContext(), getString(R.string.save_note_before_export), 1, 2);
+                Toasto.show_toast(requireContext(), getString(R.string.please_save_your_note_first), 1, 2);
             }
         });
 
         // speech to text
-        LinearLayout speechToText = view.findViewById(R.id.speech_to_text);
-        speechToText.setOnClickListener(v -> {
+        view.findViewById(R.id.speech_to_text).setOnClickListener(v -> {
             if (note != null) {
                 Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
                 intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
@@ -226,12 +219,12 @@ public class MoreActionsBottomSheetModal extends BottomSheetDialogFragment {
                 intent.putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.speak_notes));
 
                 try {
-                    startActivityForResult(intent, REQUEST_CODE_TEXT_TO_SPEECH);
+                    startActivityForResult.launch(intent);
                 } catch (Exception e) {
                     Toasto.show_toast(requireContext(), e.getMessage(), 1, 0);
                 }
             } else {
-                Toasto.show_toast(requireContext(), getString(R.string.save_note_before_speech), 1, 2);
+                Toasto.show_toast(requireContext(), getString(R.string.please_save_your_note_first), 1, 2);
             }
         });
 
@@ -267,14 +260,15 @@ public class MoreActionsBottomSheetModal extends BottomSheetDialogFragment {
 
                 @Override
                 protected Void doInBackground(Void... voids) {
-                    APP_DATABASE.requestDatabase(getContext()).dao().request_insert_archive_note(presetArchiveNote);
+                    APP_DATABASE.requestDatabase(requireContext()).dao().request_insert_archive_note(presetArchiveNote);
+                    APP_DATABASE.requestDatabase(requireContext()).dao().request_delete_note(note);
                     return null;
                 }
 
                 @Override
                 protected void onPostExecute(Void aVoid) {
                     super.onPostExecute(aVoid);
-                    Toasto.show_toast(requireContext(), getString(R.string.note_archived), 1, 0);
+                    onArchiveListener.onArchiveListener(RequestCodes.REQUEST_ARCHIVE_NOTE_CODE);
                     dismiss();
                 }
             }
@@ -304,7 +298,7 @@ public class MoreActionsBottomSheetModal extends BottomSheetDialogFragment {
 
             requestMoveNoteToTrash(presetTrashNote);
         } else {
-            onDeleteListener.onDeleteListener(REQUEST_DISCARD_NOTE_CODE);
+            onDeleteListener.onDeleteListener(RequestCodes.REQUEST_DISCARD_NOTE_CODE);
             Toasto.show_toast(requireContext(), getString(R.string.note_discarded), 1, 0);
             dismiss();
         }
@@ -346,21 +340,20 @@ public class MoreActionsBottomSheetModal extends BottomSheetDialogFragment {
             class DeleteNoteTask extends AsyncTask<Void, Void, Void> {
                 @Override
                 protected Void doInBackground(Void... voids) {
-                    APP_DATABASE.requestDatabase(getContext()).dao().request_delete_note(note);
+                    APP_DATABASE.requestDatabase(requireContext()).dao().request_delete_note(note);
                     return null;
                 }
 
                 @Override
                 protected void onPostExecute(Void aVoid) {
                     super.onPostExecute(aVoid);
-                    onDeleteListener.onDeleteListener(REQUEST_DELETE_NOTE_CODE);
+                    onDeleteListener.onDeleteListener(RequestCodes.REQUEST_DELETE_NOTE_CODE);
                     dismiss();
                 }
             }
-
             new DeleteNoteTask().execute();
         } else {
-            onDeleteListener.onDeleteListener(REQUEST_DISCARD_NOTE_CODE);
+            onDeleteListener.onDeleteListener(RequestCodes.REQUEST_DISCARD_NOTE_CODE);
             dismiss();
         }
     }
@@ -484,27 +477,20 @@ public class MoreActionsBottomSheetModal extends BottomSheetDialogFragment {
         }*/
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_SET_PIN_CODE) {
-            if (data != null) {
-                if (Objects.equals(data.getStringExtra("result"), "lock")) {
-                    onLockListener.onLockListener(REQUEST_LOCK_NOTE_CODE);
-                }
-            }
-        } else if (requestCode == REQUEST_CODE_TEXT_TO_SPEECH) {
-            if (resultCode == RESULT_OK && null != data) {
-                ArrayList<String> result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                if (result != null) {
-                    onSpeechInputListener.onSpeechInputListener(REQUEST_SPEECH_INPUT_CODE, result.get(0));
+    @SuppressLint("NotifyDataSetChanged")
+    ActivityResultLauncher<Intent> startActivityForResult = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+        if (result != null) {
+            if (result.getResultCode() == RequestCodes.REQUEST_SET_PIN_CODE) {
+                onLockListener.onLockListener(RequestCodes.REQUEST_LOCK_NOTE_CODE);
+            } else {
+                ArrayList<String> callback = Objects.requireNonNull(result.getData()).getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                if (callback != null) {
+                    onSpeechInputListener.onSpeechInputListener(callback.get(0));
                     dismiss();
                 }
             }
         }
-    }
-
-
+    });
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {

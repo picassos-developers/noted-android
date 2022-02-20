@@ -2,7 +2,6 @@ package com.picassos.noted.activities;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -42,8 +41,7 @@ public class ViewAttachedImageActivity extends AppCompatActivity {
         findViewById(R.id.note_image_remove).setOnClickListener(v -> {
             if (getIntent().getStringExtra("image_type") == null) {
                 Intent intent = new Intent();
-                intent.putExtra("request", RequestCodes.REQUEST_REMOVE_NOTE_IMAGE_CODE);
-                setResult(Activity.RESULT_OK, intent);
+                setResult(RequestCodes.REQUEST_REMOVE_NOTE_IMAGE_CODE, intent);
             }
             finish();
         });

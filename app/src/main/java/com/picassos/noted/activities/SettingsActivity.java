@@ -12,12 +12,12 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 
 import com.picassos.noted.R;
 import com.picassos.noted.constants.Constants;
+import com.picassos.noted.constants.RequestCodes;
 import com.picassos.noted.databases.APP_DATABASE;
 import com.picassos.noted.sharedPreferences.SharedPref;
 import com.picassos.noted.sheets.PinOptionsBottomSheetModal;
@@ -27,7 +27,6 @@ import com.picassos.noted.utils.Toasto;
 import de.raphaelebner.roomdatabasebackup.core.RoomBackup;
 
 public class SettingsActivity extends AppCompatActivity implements PinOptionsBottomSheetModal.OnRemoveListener {
-
     private SharedPref sharedPref;
 
     @Override
@@ -46,9 +45,8 @@ public class SettingsActivity extends AppCompatActivity implements PinOptionsBot
         // initialize room backup
         final RoomBackup backupDatabase = new RoomBackup(SettingsActivity.this);
 
-        // return back and finish activity
-        ImageView go_back = findViewById(R.id.go_back);
-        go_back.setOnClickListener(v -> {
+        // finish activity
+        findViewById(R.id.go_back).setOnClickListener(v -> {
             startActivity(new Intent(SettingsActivity.this, MainActivity.class));
             finish();
         });
@@ -196,13 +194,12 @@ public class SettingsActivity extends AppCompatActivity implements PinOptionsBot
      * can share the app.
      */
     private void shareApp() {
-        Intent share = new Intent(Intent.ACTION_SEND);
-
-        share.setType("text/plain");
-
-        share.putExtra(Intent.EXTRA_TEXT, R.string.share_description);
-
-        startActivity(Intent.createChooser(share, getString(R.string.share) + " " + getString(R.string.app_name)));
+        Intent sendIntent = new Intent();
+        sendIntent.setAction(Intent.ACTION_SEND);
+        sendIntent.putExtra(Intent.EXTRA_TEXT, getString(R.string.share_description) + " Get " + getString(R.string.app_name) + " at https://play.google.com/store/apps/details?id=" + getPackageName());
+        sendIntent.setType("text/plain");
+        Intent shareIntent = Intent.createChooser(sendIntent, null);
+        startActivity(shareIntent);
     }
 
     /**
@@ -282,7 +279,7 @@ public class SettingsActivity extends AppCompatActivity implements PinOptionsBot
 
     @Override
     public void onRemoveListener(int requestCode) {
-        if (requestCode == PinOptionsBottomSheetModal.REQUEST_REMOVE_PIN_CODE) {
+        if (requestCode == RequestCodes.REQUEST_REMOVE_PIN_CODE) {
             Toasto.show_toast(this, getString(R.string.pin_code_unset), 1, 2);
         }
     }

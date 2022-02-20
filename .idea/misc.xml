@@ -4,6 +4,8 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="..\:/Users/Lenovo/StudioProjects/noted-android/app/src/main/res/layout/popup_attach_link.xml" value="0.209375" />
+        <entry key="app/src/main/res/drawable/item_background.xml" value="0.2708333333333333" />
+        <entry key="app/src/main/res/drawable/navigation_selected_item.xml" value="0.2708333333333333" />
         <entry key="app/src/main/res/drawable/toast_alert.xml" value="0.26927083333333335" />
         <entry key="app/src/main/res/drawable/toast_dark.xml" value="0.26927083333333335" />
         <entry key="app/src/main/res/drawable/toast_warning.xml" value="0.26927083333333335" />
@@ -14,10 +16,31 @@
         <entry key="app/src/main/res/layout/activity_edit_category.xml" value="0.253125" />
         <entry key="app/src/main/res/layout/activity_filtered_notes.xml" value="0.253125" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.253125" />
+        <entry key="app/src/main/res/layout/activity_settings.xml" value="0.33" />
+        <entry key="app/src/main/res/layout/activity_todo_create_list.xml" value="0.253125" />
+        <entry key="app/src/main/res/layout/activity_todo_list.xml" value="0.253125" />
         <entry key="app/src/main/res/layout/activity_view_attached_video.xml" value="0.253125" />
+        <entry key="app/src/main/res/layout/add_category_bottom_sheet_modal.xml" value="0.253125" />
+        <entry key="app/src/main/res/layout/add_todo_bottom_sheet_modal.xml" value="0.33" />
+        <entry key="app/src/main/res/layout/archive_note_actions_bottom_sheet_modal.xml" value="0.253125" />
+        <entry key="app/src/main/res/layout/archived_note_view_bottom_sheet_modal.xml" value="0.253125" />
+        <entry key="app/src/main/res/layout/categories_bottom_sheet_modal.xml" value="0.253125" />
+        <entry key="app/src/main/res/layout/edit_category_bottom_sheet_modal.xml" value="0.253125" />
+        <entry key="app/src/main/res/layout/fragment_home.xml" value="0.2546875" />
+        <entry key="app/src/main/res/layout/fragment_trash.xml" value="0.2546875" />
+        <entry key="app/src/main/res/layout/home_more_options_bottom_sheet_modal.xml" value="0.253125" />
+        <entry key="app/src/main/res/layout/more_actions_bottom_sheet_modal.xml" value="0.253125" />
+        <entry key="app/src/main/res/layout/note_actions_bottom_sheet_modal.xml" value="0.253125" />
+        <entry key="app/src/main/res/layout/password_bottom_sheet_modal.xml" value="0.253125" />
+        <entry key="app/src/main/res/layout/pin_options_bottom_sheet_modal.xml" value="0.253125" />
         <entry key="app/src/main/res/layout/toast_layout_alert.xml" value="0.253125" />
         <entry key="app/src/main/res/layout/toast_layout_primary.xml" value="0.253125" />
         <entry key="app/src/main/res/layout/toast_layout_warning.xml" value="0.253125" />
+        <entry key="app/src/main/res/layout/todo_actions_bottom_sheet_modal.xml" value="0.253125" />
+        <entry key="app/src/main/res/layout/todo_lists_bottom_sheet_modal.xml" value="0.253125" />
+        <entry key="app/src/main/res/layout/todo_more_options_bottom_sheet_modal.xml" value="0.253125" />
+        <entry key="app/src/main/res/layout/todo_move_to_bottom_sheet_modal.xml" value="0.253125" />
+        <entry key="app/src/main/res/layout/trash_note_actions_bottom_sheet_modal.xml" value="0.2546875" />
       </map>
     </option>
   </component>

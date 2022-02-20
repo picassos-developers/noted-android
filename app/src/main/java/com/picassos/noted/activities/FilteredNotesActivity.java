@@ -15,7 +15,6 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.picassos.noted.R;
@@ -32,6 +31,7 @@ import com.picassos.noted.utils.Toasto;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 public class FilteredNotesActivity extends AppCompatActivity implements NotesListener, ImplementedPasswordBottomSheetModal.OnUnlockListener {
 
@@ -74,11 +74,9 @@ public class FilteredNotesActivity extends AppCompatActivity implements NotesLis
         searchBar = findViewById(R.id.search_bar);
         searchBar.addTextChangedListener(searchTextWatcher);
 
-        // search mic (search with voice)
-        ImageView searchMic = findViewById(R.id.search_mic);
-        searchMic.setOnClickListener(v -> {
+        // voice search
+        findViewById(R.id.search_mic).setOnClickListener(v -> {
             Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-            intent.putExtra("request", RequestCodes.REQUEST_CODE_TEXT_TO_SPEECH);
             intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
             intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
             intent.putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.speak_notes));
@@ -107,7 +105,6 @@ public class FilteredNotesActivity extends AppCompatActivity implements NotesLis
      * @param identifier for category id
      */
     private void requestNotes(final int requestCode, final boolean isDeleted, int identifier) {
-
         @SuppressLint("StaticFieldLeak")
         class GetNotesTask extends AsyncTask<Void, Void, List<Note>> {
 
@@ -120,21 +117,25 @@ public class FilteredNotesActivity extends AppCompatActivity implements NotesLis
             @Override
             protected void onPostExecute(List<Note> notes_inline) {
                 super.onPostExecute(notes_inline);
-                if (requestCode == RequestCodes.REQUEST_CODE_VIEW_NOTE_OK) {
-                    notes.addAll(notes_inline);
-                    notesAdapter.notifyDataSetChanged();
-                } else if (requestCode == RequestCodes.REQUEST_CODE_ADD_NOTE_OK) {
-                    notes.add(0, notes_inline.get(0));
-                    notesAdapter.notifyItemInserted(0);
-                    notesRecyclerview.smoothScrollToPosition(0);
-                } else if (requestCode == RequestCodes.REQUEST_CODE_UPDATE_NOTE_OK) {
-                    notes.remove(noteClickedPosition);
-                    if (isDeleted) {
-                        notesAdapter.notifyItemRemoved(noteClickedPosition);
-                    } else {
-                        notes.add(noteClickedPosition, notes_inline.get(noteClickedPosition));
-                        notesAdapter.notifyItemChanged(noteClickedPosition);
-                    }
+                switch (requestCode) {
+                    case RequestCodes.REQUEST_CODE_VIEW_NOTE_OK:
+                        notes.addAll(notes_inline);
+                        notesAdapter.notifyDataSetChanged();
+                        break;
+                    case RequestCodes.REQUEST_CODE_ADD_NOTE_OK:
+                        notes.add(0, notes_inline.get(0));
+                        notesAdapter.notifyItemInserted(0);
+                        notesRecyclerview.smoothScrollToPosition(0);
+                        break;
+                    case RequestCodes.REQUEST_CODE_UPDATE_NOTE_OK:
+                        notes.remove(noteClickedPosition);
+                        if (isDeleted) {
+                            notesAdapter.notifyItemRemoved(noteClickedPosition);
+                        } else {
+                            notes.add(noteClickedPosition, notes_inline.get(noteClickedPosition));
+                            notesAdapter.notifyItemChanged(noteClickedPosition);
+                        }
+                        break;
                 }
 
                 if (notesAdapter.getItemCount() == 0) {
@@ -211,22 +212,20 @@ public class FilteredNotesActivity extends AppCompatActivity implements NotesLis
     }
 
     ActivityResultLauncher<Intent> startActivityForResult = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
-        if (result != null && result.getResultCode() == RESULT_OK) {
-            if (result.getData() != null) {
-                switch (result.getData().getIntExtra("request", 0)) {
-                    case RequestCodes.REQUEST_CODE_TEXT_TO_SPEECH:
-                        ArrayList<String> callback = result.getData().getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                        if (callback != null) {
-                            searchBar.setText(callback.get(0));
-                        }
-                        break;
-                    case RequestCodes.REQUEST_CODE_ADD_NOTE_OK:
-                        requestNotes(RequestCodes.REQUEST_CODE_ADD_NOTE_OK, false, getIntent().getIntExtra("identifier", 0));
-                        break;
-                    case RequestCodes.REQUEST_CODE_UPDATE_NOTE_OK:
-                        requestNotes(RequestCodes.REQUEST_CODE_UPDATE_NOTE_OK, result.getData().getBooleanExtra("is_note_removed", false), getIntent().getIntExtra("identifier", 0));
-                        break;
-                }
+        if (result != null) {
+            switch (result.getResultCode()) {
+                case RequestCodes.REQUEST_CODE_ADD_NOTE_OK:
+                    requestNotes(RequestCodes.REQUEST_CODE_ADD_NOTE_OK, false, getIntent().getIntExtra("identifier", 0));
+                    break;
+                case RequestCodes.REQUEST_CODE_UPDATE_NOTE_OK:
+                    requestNotes(RequestCodes.REQUEST_CODE_UPDATE_NOTE_OK, Objects.requireNonNull(result.getData()).getBooleanExtra("is_note_removed", false), getIntent().getIntExtra("identifier", 0));
+                    break;
+                default:
+                    ArrayList<String> callback = Objects.requireNonNull(result.getData()).getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                    if (callback != null) {
+                        searchBar.setText(callback.get(0));
+                    }
+                    break;
             }
         }
     });

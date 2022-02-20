@@ -15,7 +15,7 @@ import android.content.SharedPreferences;
 
 public class SharedPref {
 
-    private SharedPreferences sharedPreferences;
+    private final SharedPreferences sharedPreferences;
 
     /*---------------- Shared Pref ---------------*/
     public SharedPref(Context context) {
@@ -193,6 +193,24 @@ public class SharedPref {
     public int loadNotePinCode() {
 
         return sharedPreferences.getInt("NotePinCode", 0);
+
+    }
+
+    /*---------------- Set Rewarded Amount ---------------*/
+    public void setRewardedAmount(Integer state) {
+
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        editor.putInt("RewardedAmount", state);
+
+        editor.apply();
+
+    }
+
+    /*---------------- Load Rewarded Amount ---------------*/
+    public Integer loadRewardedAmount() {
+
+        return sharedPreferences.getInt("RewardedAmount", 0);
 
     }
 

@@ -1,5 +1,6 @@
 package com.picassos.noted.activities;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 
@@ -8,25 +9,30 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.FullScreenContentCallback;
+import com.google.android.gms.ads.LoadAdError;
 import com.google.android.gms.ads.MobileAds;
-import com.google.android.gms.ads.reward.RewardItem;
-import com.google.android.gms.ads.reward.RewardedVideoAd;
-import com.google.android.gms.ads.reward.RewardedVideoAdListener;
+import com.google.android.gms.ads.rewarded.RewardedAd;
+import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback;
 import com.picassos.noted.R;
 import com.picassos.noted.constants.Constants;
 import com.picassos.noted.constants.RequestCodes;
 import com.picassos.noted.databases.APP_DATABASE;
 import com.picassos.noted.entities.Todo;
+import com.picassos.noted.sharedPreferences.SharedPref;
 import com.picassos.noted.sheets.TodoMoveToBottomSheetModal;
 import com.picassos.noted.utils.Helper;
 import com.picassos.noted.utils.Toasto;
 
-public class ViewTodoActivity extends AppCompatActivity implements RewardedVideoAdListener, TodoMoveToBottomSheetModal.OnMoveListener {
+public class ViewTodoActivity extends AppCompatActivity implements TodoMoveToBottomSheetModal.OnMoveListener {
+
+    // Shared Preferences
+    SharedPref sharedPref;
 
     // States
     private final static int STATE_UNCOMPLETED = 0;
@@ -36,7 +42,7 @@ public class ViewTodoActivity extends AppCompatActivity implements RewardedVideo
     private Bundle bundle;
 
     // rewarded video ad
-    private RewardedVideoAd rewardedVideoAd;
+    private RewardedAd rewardedAd;
 
     // preset to-do
     private Todo presetTodo;
@@ -51,6 +57,9 @@ public class ViewTodoActivity extends AppCompatActivity implements RewardedVideo
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+        sharedPref = new SharedPref(this);
+
         super.onCreate(savedInstanceState);
 
         // OPTIONS
@@ -64,10 +73,7 @@ public class ViewTodoActivity extends AppCompatActivity implements RewardedVideo
         bundle = new Bundle();
 
         if (Constants.ENABLE_GOOGLE_ADMOB_ADS) {
-            // Use an activity context to get the rewarded video instance.
-            rewardedVideoAd = MobileAds.getRewardedVideoAdInstance(this);
-            rewardedVideoAd.setRewardedVideoAdListener(this);
-
+            MobileAds.initialize(this, initializationStatus -> {});
             loadRewardedVideoAd();
         }
 
@@ -144,8 +150,7 @@ public class ViewTodoActivity extends AppCompatActivity implements RewardedVideo
                 protected void onPostExecute(Void aVoid) {
                     super.onPostExecute(aVoid);
                     Intent intent = new Intent();
-                    intent.putExtra("request", RequestCodes.REQUEST_DELETE_TODO_CODE);
-                    setResult(RESULT_OK, intent);
+                    setResult(RequestCodes.REQUEST_ACTION_TODO_CODE, intent);
                     finish();
                 }
             }
@@ -172,8 +177,7 @@ public class ViewTodoActivity extends AppCompatActivity implements RewardedVideo
                 protected void onPostExecute(Void aVoid) {
                     super.onPostExecute(aVoid);
                     Intent intent = new Intent();
-                    intent.putExtra("request", RequestCodes.REQUEST_MARK_TODO_CODE);
-                    setResult(RESULT_OK, intent);
+                    setResult(RequestCodes.REQUEST_ACTION_TODO_CODE, intent);
                     finish();
                 }
             }
@@ -208,20 +212,22 @@ public class ViewTodoActivity extends AppCompatActivity implements RewardedVideo
                     protected void onPostExecute(Void aVoid) {
                         super.onPostExecute(aVoid);
                         if (Constants.ENABLE_GOOGLE_ADMOB_ADS) {
-                            if (rewardedVideoAd.isLoaded()) {
-                                rewardedVideoAd.show();
-                            } else {
-                                Intent intent = new Intent();
-                                intent.putExtra("request", RequestCodes.REQUEST_SAVE_TODO_CODE);
-                                setResult(RESULT_OK, intent);
-                                finish();
+                            loadRewardedVideoAd();
+                            if (rewardedAd != null) {
+                                if (sharedPref.loadRewardedAmount() >= 3) {
+                                    sharedPref.setRewardedAmount(0);
+                                    showRewardedVideo();
+                                }
                             }
+                            sharedPref.setRewardedAmount(sharedPref.loadRewardedAmount() + 1);
+
+                            Intent intent = new Intent();
+                            setResult(RequestCodes.REQUEST_ACTION_TODO_CODE, intent);
                         } else {
                             Intent intent = new Intent();
-                            intent.putExtra("request", RequestCodes.REQUEST_SAVE_TODO_CODE);
-                            setResult(RESULT_OK, intent);
-                            finish();
+                            setResult(RequestCodes.REQUEST_ACTION_TODO_CODE, intent);
                         }
+                        finish();
                     }
                 }
 
@@ -236,56 +242,47 @@ public class ViewTodoActivity extends AppCompatActivity implements RewardedVideo
      * load Google AdMob rewarded ad
      */
     private void loadRewardedVideoAd() {
-        rewardedVideoAd.loadAd(Constants.GOOGLE_ADMOB_REWARDED_AD_UNIT_ID,
-                new AdRequest.Builder().build());
+        if (rewardedAd == null) {
+            AdRequest adRequest = new AdRequest.Builder().build();
+            RewardedAd.load(
+                    this,
+                    Constants.GOOGLE_ADMOB_REWARDED_AD_UNIT_ID,
+                    adRequest,
+                    new RewardedAdLoadCallback() {
+                        @Override
+                        public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
+                            rewardedAd = null;
+                        }
+
+                        @Override
+                        public void onAdLoaded(@NonNull RewardedAd rewardedAd) {
+                            ViewTodoActivity.this.rewardedAd = rewardedAd;
+                        }
+                    });
+        }
     }
 
-    @Override
-    public void onRewardedVideoAdLoaded() {
-        Log.d("AdMob", "Ad Loaded");
-    }
+    private void showRewardedVideo() {
+        rewardedAd.setFullScreenContentCallback(
+                new FullScreenContentCallback() {
+                    @Override
+                    public void onAdShowedFullScreenContent() {
+                    }
 
-    @Override
-    public void onRewardedVideoAdOpened() {
-        Log.d("AdMob", "Ad Opened");
-    }
+                    @Override
+                    public void onAdFailedToShowFullScreenContent(@NonNull AdError adError) {
+                        rewardedAd = null;
+                    }
 
-    @Override
-    public void onRewardedVideoStarted() {
-        Log.d("AdMob", "Ad Started");
-    }
-
-    @Override
-    public void onRewardedVideoAdClosed() {
-        loadRewardedVideoAd();
-        Intent intent = new Intent();
-        intent.putExtra("request", RequestCodes.REQUEST_SAVE_TODO_CODE);
-        setResult(RESULT_OK, intent);
-        finish();
-    }
-
-    @Override
-    public void onRewarded(RewardItem rewardItem) {
-        loadRewardedVideoAd();
-        Intent intent = new Intent();
-        intent.putExtra("request", RequestCodes.REQUEST_SAVE_TODO_CODE);
-        setResult(RESULT_OK, intent);
-        finish();
-    }
-
-    @Override
-    public void onRewardedVideoAdLeftApplication() {
-        Log.d("AdMob", "User Left The Ad");
-    }
-
-    @Override
-    public void onRewardedVideoAdFailedToLoad(int i) {
-        Log.d("Google AdMob", "Failed to load rewarded add. Please check your parameters!");
-    }
-
-    @Override
-    public void onRewardedVideoCompleted() {
-        Log.d("AdMob", "Ad Completed Successfully!");
+                    @Override
+                    public void onAdDismissedFullScreenContent() {
+                        rewardedAd = null;
+                        ViewTodoActivity.this.loadRewardedVideoAd();
+                    }
+                });
+        rewardedAd.show(
+                this,
+                rewardItem -> finish());
     }
 
     @Override
@@ -295,7 +292,7 @@ public class ViewTodoActivity extends AppCompatActivity implements RewardedVideo
 
     @Override
     public void onMoveListener(int requestCode, int identifier) {
-        if (requestCode == TodoMoveToBottomSheetModal.REQUEST_MOVE_TASK_CODE) {
+        if (requestCode == RequestCodes.REQUEST_MOVE_TASK_CODE) {
             todoList = identifier;
         }
     }

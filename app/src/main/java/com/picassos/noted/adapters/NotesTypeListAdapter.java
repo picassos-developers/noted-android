@@ -1,5 +1,6 @@
 package com.picassos.noted.adapters;
 
+import android.annotation.SuppressLint;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
@@ -149,6 +150,7 @@ public class NotesTypeListAdapter extends RecyclerView.Adapter<NotesTypeListAdap
     public void requestSearchNotes(final String keyword) {
         timer = new Timer();
         timer.schedule(new TimerTask() {
+            @SuppressLint("NotifyDataSetChanged")
             @Override
             public void run() {
               if (keyword.trim().isEmpty()) {

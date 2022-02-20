@@ -1,7 +1,6 @@
 package com.picassos.noted.sheets;
 
 import android.annotation.SuppressLint;
-import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -11,20 +10,18 @@ import android.widget.Button;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.picassos.noted.R;
+import com.picassos.noted.constants.RequestCodes;
 import com.picassos.noted.databases.APP_DATABASE;
 import com.picassos.noted.entities.Note;
 import com.picassos.noted.entities.TrashNote;
-
-import java.util.Objects;
+import com.picassos.noted.models.SharedViewModel;
 
 public class TrashNoteActionsBottomSheetModal extends BottomSheetDialogFragment {
-
-    public static int REQUEST_DELETE_NOTE_CODE = 3;
-    public static int REQUEST_DISCARD_NOTE_CODE = 4;
-    public static int REQUEST_RESTORE_NOTE_CODE = 5;
+    SharedViewModel sharedViewModel;
 
     TrashNote trashNote;
 
@@ -55,6 +52,13 @@ public class TrashNoteActionsBottomSheetModal extends BottomSheetDialogFragment 
         super.onCreate(savedInstanceState);
     }
 
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        sharedViewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
+    }
+
     /**
      * request save data from trash
      * note class to note class
@@ -76,7 +80,7 @@ public class TrashNoteActionsBottomSheetModal extends BottomSheetDialogFragment 
 
             requestRestoreNote(preset_note);
         } else {
-            sendResult(REQUEST_DISCARD_NOTE_CODE);
+            sendResult(RequestCodes.REQUEST_DISCARD_NOTE_CODE);
         }
     }
 
@@ -124,23 +128,21 @@ public class TrashNoteActionsBottomSheetModal extends BottomSheetDialogFragment 
                 protected void onPostExecute(Void aVoid) {
                     super.onPostExecute(aVoid);
                     if (is_permanent == 1) {
-                        sendResult(REQUEST_DELETE_NOTE_CODE);
+                        sendResult(RequestCodes.REQUEST_DELETE_NOTE_PERMANENTLY_CODE);
                     } else {
-                        sendResult(REQUEST_RESTORE_NOTE_CODE);
+                        sendResult(RequestCodes.REQUEST_RESTORE_NOTE_CODE);
                     }
                 }
             }
 
             new DeleteTrashNoteTask().execute();
         } else {
-            sendResult(REQUEST_DISCARD_NOTE_CODE);
+            sendResult(RequestCodes.REQUEST_DISCARD_NOTE_CODE);
         }
     }
 
     private void sendResult(int REQUEST_CODE) {
-        Intent intent = new Intent();
-        Objects.requireNonNull(getTargetFragment()).onActivityResult(getTargetRequestCode(), REQUEST_CODE, intent);
+        sharedViewModel.setRequestCode(REQUEST_CODE);
         dismiss();
     }
-
 }

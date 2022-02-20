@@ -15,7 +15,7 @@ public class Constants {
      * EMAIL_ADDRESS used for feedback
      * and other contact options
      */
-    public static final String EMAIL_ADDRESS = "rixhion@gmail.com";
+    public static final String EMAIL_ADDRESS = "hello@picassos.xyz";
 
     /**
      * app privacy policy url.
@@ -40,11 +40,10 @@ public class Constants {
      */
     public static final boolean ENABLE_GOOGLE_ADMOB_ADS = true;
     public static final String GOOGLE_ADMOB_NATIVE_AD_UNIT_ID = "ca-app-pub-5451983796114290/6371660017";
-    public static final String GOOGLE_ADMOB_REWARDED_AD_UNIT_ID = "ca-app-pub-5451983796114290/2679827013";
+    public static final String GOOGLE_ADMOB_REWARDED_AD_UNIT_ID = "ca-app-pub-3940256099942544/5224354917";
 
     /**
-     * enable start app with
-     * fingerprint option
+     * enable fingerprint option
      */
     public static final boolean ENABLE_FINGERPRINT_LOGIN = true;
 

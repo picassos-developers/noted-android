@@ -1,8 +1,6 @@
 package com.picassos.noted.sheets;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.Editable;
@@ -16,15 +14,16 @@ import android.widget.EditText;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.picassos.noted.R;
 import com.picassos.noted.entities.Note;
+import com.picassos.noted.models.SharedViewModel;
 import com.picassos.noted.sharedPreferences.SharedPref;
 
-import java.util.Objects;
-
 public class PasswordBottomSheetModal extends BottomSheetDialogFragment {
+    SharedViewModel sharedViewModel;
 
     private SharedPref sharedPref;
 
@@ -60,6 +59,13 @@ public class PasswordBottomSheetModal extends BottomSheetDialogFragment {
         super.onCreate(savedInstanceState);
     }
 
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        sharedViewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
+    }
+
     /**
      * text watcher checks password
      */
@@ -75,11 +81,9 @@ public class PasswordBottomSheetModal extends BottomSheetDialogFragment {
         public void onTextChanged(CharSequence s, int start, int before, int count) {
             if (!TextUtils.isEmpty(pinCode.getText().toString())) {
                 if (sharedPref.loadNotePinCode() == Integer.parseInt(pinCode.getText().toString())) {
-                    Intent intent = new Intent();
                     if (note != null) {
-                        intent.putExtra("data", note);
+                        sharedViewModel.setData(note);
                     }
-                    Objects.requireNonNull(getTargetFragment()).onActivityResult(getTargetRequestCode(), Activity.RESULT_OK, intent);
                     dismiss();
                 }
             }

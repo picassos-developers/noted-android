@@ -2,8 +2,9 @@ package com.picassos.noted.activities;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ShareCompat;
+import androidx.core.content.FileProvider;
 
 import android.annotation.SuppressLint;
 import android.app.AlarmManager;
@@ -14,7 +15,9 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
@@ -39,12 +42,15 @@ import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
+import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.FullScreenContentCallback;
+import com.google.android.gms.ads.LoadAdError;
 import com.google.android.gms.ads.MobileAds;
-import com.google.android.gms.ads.reward.RewardItem;
-import com.google.android.gms.ads.reward.RewardedVideoAd;
-import com.google.android.gms.ads.reward.RewardedVideoAdListener;
+import com.google.android.gms.ads.rewarded.RewardedAd;
+import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback;
 import com.makeramen.roundedimageview.RoundedImageView;
+import com.picassos.noted.BuildConfig;
 import com.picassos.noted.R;
 import com.picassos.noted.constants.Constants;
 import com.picassos.noted.constants.RequestCodes;
@@ -52,6 +58,7 @@ import com.picassos.noted.databases.APP_DATABASE;
 import com.picassos.noted.entities.Category;
 import com.picassos.noted.entities.Note;
 import com.picassos.noted.receivers.ReminderReceiver;
+import com.picassos.noted.sharedPreferences.SharedPref;
 import com.picassos.noted.sheets.AttachImageBottomSheetModal;
 import com.picassos.noted.sheets.CategoriesBottomSheetModal;
 import com.picassos.noted.sheets.MoreActionsBottomSheetModal;
@@ -69,13 +76,16 @@ import java.util.Locale;
 import java.util.Objects;
 
 public class AddNoteActivity extends AppCompatActivity implements MoreActionsBottomSheetModal.OnDeleteListener,
-        CategoriesBottomSheetModal.OnChooseListener, RewardedVideoAdListener, ReminderBottomSheetModal.OnAddListener,
+        CategoriesBottomSheetModal.OnChooseListener, ReminderBottomSheetModal.OnAddListener,
         ReminderBottomSheetModal.OnRemoveListener, AttachImageBottomSheetModal.OnChooseImageListener,
         AttachImageBottomSheetModal.OnChooseVideoListener, MoreActionsBottomSheetModal.OnLockListener,
-        MoreActionsBottomSheetModal.OnSpeechInputListener {
+        MoreActionsBottomSheetModal.OnSpeechInputListener, MoreActionsBottomSheetModal.OnArchiveListener {
 
     // Bundle
     private Bundle bundle;
+
+    // Shared Preferences
+    SharedPref sharedPref;
 
     /**
      * note fields added to activity
@@ -146,11 +156,15 @@ public class AddNoteActivity extends AppCompatActivity implements MoreActionsBot
     private long alarmStartTime;
     PendingIntent reminderIntent;
 
-    private RewardedVideoAd rewardedVideoAd;
+    // rewarded video ad
+    private RewardedAd rewardedAd;
 
-    @SuppressLint("ResourceType")
+    @SuppressLint({"ResourceType", "SetWorldReadable"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+        sharedPref = new SharedPref(this);
+
         super.onCreate(savedInstanceState);
 
         // OPTIONS
@@ -164,10 +178,7 @@ public class AddNoteActivity extends AppCompatActivity implements MoreActionsBot
         bundle = new Bundle();
 
         if (Constants.ENABLE_GOOGLE_ADMOB_ADS) {
-            // Use an activity context to get the rewarded video instance.
-            rewardedVideoAd = MobileAds.getRewardedVideoAdInstance(this);
-            rewardedVideoAd.setRewardedVideoAdListener(this);
-
+            MobileAds.initialize(this, initializationStatus -> {});
             loadRewardedVideoAd();
         }
 
@@ -224,14 +235,28 @@ public class AddNoteActivity extends AppCompatActivity implements MoreActionsBot
 
         findViewById(R.id.note_image_share).setOnClickListener(v -> {
             if (selectedImageUri != null) {
-                Intent share = ShareCompat.IntentBuilder.from(this)
-                        .setStream(selectedImageUri)
-                        .setType("text/html")
-                        .getIntent()
-                        .setAction(Intent.ACTION_SEND)
-                        .setDataAndType(selectedImageUri, "image/*")
-                        .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                startActivity(Intent.createChooser(share, getString(R.string.share_image)));
+                Drawable drawable = noteImage.getDrawable();
+                Bitmap bitmap=((BitmapDrawable)drawable).getBitmap();
+
+                try {
+                    File file = new File(getApplicationContext().getExternalCacheDir(), File.separator + "image that you wants to share");
+                    FileOutputStream fOut = new FileOutputStream(file);
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fOut);
+                    fOut.flush();
+                    fOut.close();
+                    file.setReadable(true, false);
+                    final Intent intent = new Intent(android.content.Intent.ACTION_SEND);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    Uri photoURI = FileProvider.getUriForFile(getApplicationContext(), BuildConfig.APPLICATION_ID +".provider", file);
+
+                    intent.putExtra(Intent.EXTRA_STREAM, photoURI);
+                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    intent.setType("image/*");
+
+                    startActivity(Intent.createChooser(intent, getString(R.string.share_image)));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         });
 
@@ -476,7 +501,6 @@ public class AddNoteActivity extends AppCompatActivity implements MoreActionsBot
 
         // set preset note color
         setNoteColorIfPreset();
-
     }
 
     /**
@@ -530,20 +554,16 @@ public class AddNoteActivity extends AppCompatActivity implements MoreActionsBot
             protected void onPostExecute(Void aVoid) {
                 super.onPostExecute(aVoid);
                 if (Constants.ENABLE_GOOGLE_ADMOB_ADS) {
-                    if (rewardedVideoAd.isLoaded()) {
-                        rewardedVideoAd.show();
-                    } else {
-                        Intent intent = new Intent();
-                        intent.putExtra("request", RequestCodes.REQUEST_CODE_UPDATE_NOTE_OK);
-                        setResult(RESULT_OK, intent);
-                        finish();
+                    loadRewardedVideoAd();
+                    if (rewardedAd != null) {
+                        if (sharedPref.loadRewardedAmount() >= 3) {
+                            sharedPref.setRewardedAmount(0);
+                            showRewardedVideo();
+                        }
                     }
-                } else {
-                    Intent intent = new Intent();
-                    intent.putExtra("request", RequestCodes.REQUEST_CODE_UPDATE_NOTE_OK);
-                    setResult(RESULT_OK, intent);
-                    finish();
+                    sharedPref.setRewardedAmount(sharedPref.loadRewardedAmount() + 1);
                 }
+                setResultFinish();
             }
         }
 
@@ -882,21 +902,23 @@ public class AddNoteActivity extends AppCompatActivity implements MoreActionsBot
         /* check if the returned request code
         * belongs to a deleted note then close
         * the activity and refresh the recycler view */
-        if (requestCode == RequestCodes.REQUEST_DELETE_NOTE_CODE) {
-            Intent intent = new Intent();
-            intent.putExtra("is_note_removed", true);
-            setResult(RESULT_OK, intent);
-            Toasto.show_toast(this, getString(R.string.note_moved_to_trash), 1, 0);
-            finish();
-        } else if (requestCode == RequestCodes.REQUEST_DISCARD_NOTE_CODE) {
-            finish();
+        switch (requestCode) {
+            case RequestCodes.REQUEST_DELETE_NOTE_CODE:
+                Intent intent = new Intent();
+                intent.putExtra("is_note_removed", true);
+                setResult(RequestCodes.REQUEST_DELETE_NOTE_CODE, intent);
+                Toasto.show_toast(this, getString(R.string.note_moved_to_trash), 1, 0);
+                finish();
+                break;
+            case RequestCodes.REQUEST_DISCARD_NOTE_CODE:
+                finish();
+                break;
         }
     }
 
     @Override
     public void onChooseListener(int requestCode, Category category) {
-        int REQUEST_CHOOSE_CATEGORY_CODE = 5;
-        if (requestCode == REQUEST_CHOOSE_CATEGORY_CODE) {
+        if (requestCode == RequestCodes.REQUEST_CHOOSE_CATEGORY_CODE) {
             if (category != null) {
                 selectedNoteCategory = category.getCategory_id();
                 TextView note_category = findViewById(R.id.note_category);
@@ -930,60 +952,51 @@ public class AddNoteActivity extends AppCompatActivity implements MoreActionsBot
      * load Google AdMob rewarded ad
      */
     private void loadRewardedVideoAd() {
-        rewardedVideoAd.loadAd(Constants.GOOGLE_ADMOB_REWARDED_AD_UNIT_ID,
-                new AdRequest.Builder().build());
+        if (rewardedAd == null) {
+            AdRequest adRequest = new AdRequest.Builder().build();
+            RewardedAd.load(
+                    this,
+                    Constants.GOOGLE_ADMOB_REWARDED_AD_UNIT_ID,
+                    adRequest,
+                    new RewardedAdLoadCallback() {
+                        @Override
+                        public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
+                            rewardedAd = null;
+                        }
+
+                        @Override
+                        public void onAdLoaded(@NonNull RewardedAd rewardedAd) {
+                            AddNoteActivity.this.rewardedAd = rewardedAd;
+                        }
+                    });
+        }
     }
 
-    @Override
-    public void onRewardedVideoAdLoaded() {
-        Log.d("AdMob", "Ad Loaded");
-    }
+    private void showRewardedVideo() {
+        rewardedAd.setFullScreenContentCallback(
+                new FullScreenContentCallback() {
+                    @Override
+                    public void onAdShowedFullScreenContent() {
+                    }
 
-    @Override
-    public void onRewardedVideoAdOpened() {
-        Log.d("AdMob", "Ad Opened");
-    }
+                    @Override
+                    public void onAdFailedToShowFullScreenContent(@NonNull AdError adError) {
+                        rewardedAd = null;
+                    }
 
-    @Override
-    public void onRewardedVideoStarted() {
-        Log.d("AdMob", "Ad Started");
-    }
-
-    @Override
-    public void onRewardedVideoAdClosed() {
-        loadRewardedVideoAd();
-        Intent intent = new Intent();
-        setResult(RESULT_OK, intent);
-        finish();
-    }
-
-    @Override
-    public void onRewarded(RewardItem rewardItem) {
-        loadRewardedVideoAd();
-        Intent intent = new Intent();
-        setResult(RESULT_OK, intent);
-        finish();
-    }
-
-    @Override
-    public void onRewardedVideoAdLeftApplication() {
-        Log.d("AdMob", "User Left The Ad");
-    }
-
-    @Override
-    public void onRewardedVideoAdFailedToLoad(int i) {
-        Log.d("Google AdMob", "Failed to load rewarded add. Please check your parameters!");
-    }
-
-    @Override
-    public void onRewardedVideoCompleted() {
-        Log.d("AdMob", "Ad Completed Successfully!");
+                    @Override
+                    public void onAdDismissedFullScreenContent() {
+                        rewardedAd = null;
+                        AddNoteActivity.this.loadRewardedVideoAd();
+                    }
+                });
+        rewardedAd.show(
+                this,
+                rewardItem -> finish());
     }
 
     @Override
     public void onBackPressed() {
-        super.onBackPressed();
-
         if (!TextUtils.isEmpty(noteTitle.getText())) {
             if (TextUtils.isEmpty(noteSubtitle.getText().toString()) || TextUtils.isEmpty(noteDescription.getText().toString())) {
                 finish();
@@ -997,8 +1010,8 @@ public class AddNoteActivity extends AppCompatActivity implements MoreActionsBot
 
     @Override
     public void onChooseImageListener(int requestCode, Bitmap bitmap, Uri uri) {
-        if (requestCode == AttachImageBottomSheetModal.REQUEST_SELECT_IMAGE_FROM_GALLERY_CODE
-                || requestCode == AttachImageBottomSheetModal.REQUEST_CAMERA_IMAGE_CODE) {
+        if (requestCode == RequestCodes.REQUEST_SELECT_IMAGE_FROM_GALLERY_CODE
+                || requestCode == RequestCodes.REQUEST_CAMERA_IMAGE_CODE) {
             // set image
             noteImage.setImageBitmap(bitmap);
             findViewById(R.id.note_image_container).setVisibility(View.VISIBLE);
@@ -1011,7 +1024,7 @@ public class AddNoteActivity extends AppCompatActivity implements MoreActionsBot
 
     @Override
     public void onChooseVideoListener(int requestCode, Uri uri) {
-        if (requestCode == AttachImageBottomSheetModal.REQUEST_SELECT_VIDEO_FROM_GALLERY_CODE) {
+        if (requestCode == RequestCodes.REQUEST_SELECT_VIDEO_FROM_GALLERY_CODE) {
             // request video thumbnail
             Bitmap video_thumbnail = ThumbnailUtils.createVideoThumbnail(requestFilePath(uri), MediaStore.Video.Thumbnails.FULL_SCREEN_KIND);
             // set video image
@@ -1024,36 +1037,53 @@ public class AddNoteActivity extends AppCompatActivity implements MoreActionsBot
 
     @Override
     public void onLockListener(int requestCode) {
-        if (requestCode == MoreActionsBottomSheetModal.REQUEST_LOCK_NOTE_CODE) {
+        if (requestCode == RequestCodes.REQUEST_LOCK_NOTE_CODE) {
             isLocked = true;
-        } else if (requestCode == MoreActionsBottomSheetModal.REQUEST_UNLOCK_NOTE_CODE) {
+        } else if (requestCode == RequestCodes.REQUEST_UNLOCK_NOTE_CODE) {
             isLocked = false;
         }
     }
 
     @Override
-    public void onSpeechInputListener(int requestCode, String text) {
-        if (requestCode == MoreActionsBottomSheetModal.REQUEST_SPEECH_INPUT_CODE) {
+    public void onSpeechInputListener(String text) {
+        if (!TextUtils.isEmpty(text)) {
             noteDescription.append(" " + text);
         }
     }
 
+    @Override
+    public void onArchiveListener(int requestCode) {
+        if (requestCode == RequestCodes.REQUEST_ARCHIVE_NOTE_CODE) {
+            Intent intent = new Intent();
+            setResult(RequestCodes.REQUEST_ARCHIVE_NOTE_CODE, intent);
+            finish();
+        }
+    }
+
+    private void setResultFinish() {
+        Intent intent = new Intent();
+        if (presetNote != null) {
+            setResult(RequestCodes.REQUEST_CODE_UPDATE_NOTE_OK, intent);
+        } else {
+            setResult(RequestCodes.REQUEST_CODE_ADD_NOTE_OK, intent);
+        }
+        finish();
+    }
+
     @SuppressLint("NotifyDataSetChanged")
     ActivityResultLauncher<Intent> startActivityForResult = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
-        if (result != null && result.getResultCode() == RESULT_OK) {
-            if (result.getData() != null) {
-                switch (result.getData().getIntExtra("request", 0)) {
-                    case RequestCodes.REQUEST_REMOVE_NOTE_IMAGE_CODE:
-                        noteImage.setImageBitmap(null);
-                        findViewById(R.id.note_image_container).setVisibility(View.GONE);
-                        selectedImagePath = "";
-                        break;
-                    case RequestCodes.REQUEST_REMOVE_NOTE_VIDEO_CODE:
-                        noteVideo.setImageBitmap(null);
-                        findViewById(R.id.note_video_container).setVisibility(View.GONE);
-                        selectedVideoPath = "";
-                        break;
-                }
+        if (result != null) {
+            switch (result.getResultCode()) {
+                case RequestCodes.REQUEST_REMOVE_NOTE_IMAGE_CODE:
+                    noteImage.setImageBitmap(null);
+                    findViewById(R.id.note_image_container).setVisibility(View.GONE);
+                    selectedImagePath = "";
+                    break;
+                case RequestCodes.REQUEST_REMOVE_NOTE_VIDEO_CODE:
+                    noteVideo.setImageBitmap(null);
+                    findViewById(R.id.note_video_container).setVisibility(View.GONE);
+                    selectedVideoPath = "";
+                    break;
             }
         }
     });

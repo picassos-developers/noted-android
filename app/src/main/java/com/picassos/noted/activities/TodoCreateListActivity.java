@@ -11,7 +11,6 @@ import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
 import android.widget.EditText;
 
 import com.picassos.noted.R;
@@ -28,7 +27,6 @@ import java.util.Objects;
 
 public class TodoCreateListActivity extends AppCompatActivity {
 
-    Button saveList;
     EditText listTitle;
 
     @Override
@@ -54,8 +52,7 @@ public class TodoCreateListActivity extends AppCompatActivity {
         Objects.requireNonNull(inputMethodManager).toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
 
         // save list
-        saveList = findViewById(R.id.todo_list_save);
-        saveList.setOnClickListener(v -> {
+        findViewById(R.id.todo_list_save).setOnClickListener(v -> {
             if (!TextUtils.isEmpty(listTitle.getText().toString())) {
                 requestSaveList(listTitle.getText().toString());
             } else {
@@ -91,7 +88,6 @@ public class TodoCreateListActivity extends AppCompatActivity {
                 Objects.requireNonNull(inputMethodManager).toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
 
                 Intent intent = new Intent();
-                intent.putExtra("is_added", true);
                 setResult(RequestCodes.REQUEST_CREATE_LIST_CODE, intent);
                 finish();
             }
@@ -116,7 +112,7 @@ public class TodoCreateListActivity extends AppCompatActivity {
         @SuppressLint("SetTextI18n")
         @Override
         public void onTextChanged(CharSequence s, int start, int before, int count) {
-            saveList.setEnabled(!TextUtils.isEmpty(listTitle.getText().toString()));
+            findViewById(R.id.todo_list_save).setEnabled(!TextUtils.isEmpty(listTitle.getText().toString()));
         }
 
         @Override

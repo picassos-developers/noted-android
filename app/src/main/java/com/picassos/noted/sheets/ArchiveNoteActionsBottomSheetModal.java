@@ -1,27 +1,26 @@
 package com.picassos.noted.sheets;
 
 import android.annotation.SuppressLint;
-import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.picassos.noted.R;
+import com.picassos.noted.constants.RequestCodes;
 import com.picassos.noted.databases.APP_DATABASE;
 import com.picassos.noted.entities.ArchiveNote;
-
-import java.util.Objects;
+import com.picassos.noted.entities.Note;
+import com.picassos.noted.models.SharedViewModel;
 
 public class ArchiveNoteActionsBottomSheetModal extends BottomSheetDialogFragment {
-
-    public static int REQUEST_UNARCHIVE_NOTE = 1;
+    SharedViewModel sharedViewModel;
 
     private ArchiveNote archiveNote;
 
@@ -37,8 +36,7 @@ public class ArchiveNoteActionsBottomSheetModal extends BottomSheetDialogFragmen
         archiveNote = (ArchiveNote) requireArguments().getSerializable("archive_note_data");
 
         // unarchive
-        Button unarchive = view.findViewById(R.id.unarchive);
-        unarchive.setOnClickListener(v -> requestDeleteArchiveNote(archiveNote));
+        view.findViewById(R.id.unarchive).setOnClickListener(v -> requestDeleteArchiveNote(archiveNote));
 
         return view;
     }
@@ -46,6 +44,13 @@ public class ArchiveNoteActionsBottomSheetModal extends BottomSheetDialogFragmen
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        sharedViewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
     }
 
     /**
@@ -58,24 +63,34 @@ public class ArchiveNoteActionsBottomSheetModal extends BottomSheetDialogFragmen
             class DeleteNoteTask extends AsyncTask<Void, Void, Void> {
                 @Override
                 protected Void doInBackground(Void... voids) {
-                    APP_DATABASE.requestDatabase(getContext()).dao().request_delete_archive_note(archive_note);
+                    final Note presetNote = new Note();
+                    presetNote.setNote_id(archive_note.getNote_id());
+                    presetNote.setNote_title(archive_note.getNote_title());
+                    presetNote.setNote_created_at(archive_note.getNote_created_at());
+                    presetNote.setNote_subtitle(archive_note.getNote_subtitle());
+                    presetNote.setNote_description(archive_note.getNote_description());
+                    presetNote.setNote_image_path(archive_note.getNote_image_path());
+                    presetNote.setNote_image_uri(archive_note.getNote_image_uri());
+                    presetNote.setNote_video_path(archive_note.getNote_video_path());
+                    presetNote.setNote_color(archive_note.getNote_color());
+                    presetNote.setNote_web_link(archive_note.getNote_web_link());
+                    presetNote.setNote_category_id(archive_note.getNote_category_id());
+                    presetNote.setNote_locked(archive_note.isNote_locked());
+
+                    APP_DATABASE.requestDatabase(requireContext()).dao().request_insert_note(presetNote);
+                    APP_DATABASE.requestDatabase(requireContext()).dao().request_delete_archive_note(archive_note);
                     return null;
                 }
 
                 @Override
                 protected void onPostExecute(Void aVoid) {
                     super.onPostExecute(aVoid);
-                    send_result(REQUEST_UNARCHIVE_NOTE);
+                    sharedViewModel.setRequestCode(RequestCodes.REQUEST_UNARCHIVE_NOTE);
+                    dismiss();
                 }
             }
 
             new DeleteNoteTask().execute();
         }
-    }
-
-    private void send_result(int REQUEST_CODE) {
-        Intent intent = new Intent();
-        Objects.requireNonNull(getTargetFragment()).onActivityResult(getTargetRequestCode(), REQUEST_CODE, intent);
-        dismiss();
     }
 }

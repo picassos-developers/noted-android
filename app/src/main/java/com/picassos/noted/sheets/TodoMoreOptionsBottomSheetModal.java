@@ -2,7 +2,6 @@ package com.picassos.noted.sheets;
 
 import android.annotation.SuppressLint;
 import android.app.Dialog;
-import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.AsyncTask;
@@ -17,20 +16,17 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.picassos.noted.R;
+import com.picassos.noted.constants.RequestCodes;
 import com.picassos.noted.databases.APP_DATABASE;
+import com.picassos.noted.models.SharedViewModel;
 
-import java.util.Objects;
 
 public class TodoMoreOptionsBottomSheetModal extends BottomSheetDialogFragment {
-
-    // Request Codes
-    public static final int REQUEST_DELETE_ALL_COMPLETED_TASKS_CODE = 1;
-    public static final int CHOOSE_SORT_BY_A_TO_Z = 2;
-    public static final int CHOOSE_SORT_BY_Z_TO_A = 3;
-    public static final int CHOOSE_SORT_BY_DEFAULT = 4;
+    SharedViewModel sharedViewModel;
 
     private int completedTasks;
 
@@ -62,21 +58,21 @@ public class TodoMoreOptionsBottomSheetModal extends BottomSheetDialogFragment {
             // sort by default
             LinearLayout sortDefault = sortByDialog.findViewById(R.id.sort_by_default);
             sortDefault.setOnClickListener(v1 -> {
-                sendResult(CHOOSE_SORT_BY_DEFAULT);
+                sendResult(RequestCodes.CHOOSE_SORT_BY_DEFAULT);
                 sortByDialog.dismiss();
             });
 
             // sort by name a - z
             LinearLayout aToZ = sortByDialog.findViewById(R.id.sort_a_to_z);
             aToZ.setOnClickListener(v2 -> {
-                sendResult(CHOOSE_SORT_BY_A_TO_Z);
+                sendResult(RequestCodes.CHOOSE_SORT_BY_A_TO_Z);
                 sortByDialog.dismiss();
             });
 
             // sort by name z - a
             LinearLayout zToA = sortByDialog.findViewById(R.id.sort_z_to_a);
             zToA.setOnClickListener(v3 -> {
-                sendResult(CHOOSE_SORT_BY_Z_TO_A);
+                sendResult(RequestCodes.CHOOSE_SORT_BY_Z_TO_A);
                 sortByDialog.dismiss();
             });
 
@@ -110,6 +106,12 @@ public class TodoMoreOptionsBottomSheetModal extends BottomSheetDialogFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        sharedViewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
     }
 
     /**
@@ -172,7 +174,7 @@ public class TodoMoreOptionsBottomSheetModal extends BottomSheetDialogFragment {
             @Override
             protected void onPostExecute(Void aVoid) {
                 super.onPostExecute(aVoid);
-                sendResult(REQUEST_DELETE_ALL_COMPLETED_TASKS_CODE);
+                sendResult(RequestCodes.REQUEST_DELETE_ALL_COMPLETED_TASKS_CODE);
                 dismiss();
             }
         }
@@ -181,8 +183,6 @@ public class TodoMoreOptionsBottomSheetModal extends BottomSheetDialogFragment {
     }
 
     private void sendResult(int REQUEST_CODE) {
-        Intent intent = new Intent();
-        Objects.requireNonNull(getTargetFragment()).onActivityResult(getTargetRequestCode(), TodoMoreOptionsBottomSheetModal.REQUEST_DELETE_ALL_COMPLETED_TASKS_CODE, intent);
-        dismiss();
+        sharedViewModel.setRequestCode(REQUEST_CODE);
     }
 }

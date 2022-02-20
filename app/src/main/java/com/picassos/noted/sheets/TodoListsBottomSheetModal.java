@@ -7,10 +7,12 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -23,16 +25,13 @@ import com.picassos.noted.constants.RequestCodes;
 import com.picassos.noted.databases.APP_DATABASE;
 import com.picassos.noted.entities.TodosList;
 import com.picassos.noted.listeners.TodoListListener;
+import com.picassos.noted.models.SharedViewModel;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class TodoListsBottomSheetModal extends BottomSheetDialogFragment implements TodoListListener {
-
-    // Request Codes
-    public static final int REQUEST_ADD_LIST_CODE = 1;
-    public static final int REQUEST_UPDATE_LIST_CODE = 2;
+    SharedViewModel sharedViewModel;
 
     private List<TodosList> todosLists;
     private TodoListAdapter todoListAdapter;
@@ -58,8 +57,7 @@ public class TodoListsBottomSheetModal extends BottomSheetDialogFragment impleme
         requestTodoList();
 
         // create a new list
-        TextView createNewList = view.findViewById(R.id.create_list);
-        createNewList.setOnClickListener(v -> startActivityForResult(new Intent(getContext(), TodoCreateListActivity.class), REQUEST_ADD_LIST_CODE));
+        view.findViewById(R.id.create_list).setOnClickListener(v -> startActivityForResult.launch(new Intent(requireContext(), TodoCreateListActivity.class)));
 
         return view;
     }
@@ -67,6 +65,13 @@ public class TodoListsBottomSheetModal extends BottomSheetDialogFragment impleme
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        sharedViewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
     }
 
     /**
@@ -96,33 +101,25 @@ public class TodoListsBottomSheetModal extends BottomSheetDialogFragment impleme
 
     @Override
     public void onTodoListClicked(TodosList todosList, int position) {
-        Intent intent = new Intent(getContext(), TodoListActivity.class);
+        Intent intent = new Intent(requireContext(), TodoListActivity.class);
         intent.putExtra("todo_list", todosList);
-        startActivityForResult(intent, REQUEST_UPDATE_LIST_CODE);
+        startActivityForResult.launch(intent);
     }
 
     @SuppressLint("NotifyDataSetChanged")
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        switch (requestCode) {
-            case RequestCodes.REQUEST_CREATE_LIST_CODE:
-                if (data != null) {
-                    if (data.getBooleanExtra("is_added", false)) {
-                        todosLists.clear();
-                        todoListAdapter.notifyDataSetChanged();
-                        requestTodoList();
-                    }
-                }
-                break;
-            case REQUEST_UPDATE_LIST_CODE:
-                if (data != null) {
-                    if (data.getBooleanExtra("is_updated", false)) {
-                        dismiss();
-                        Intent intent = new Intent();
-                        Objects.requireNonNull(getTargetFragment()).onActivityResult(getTargetRequestCode(), REQUEST_UPDATE_LIST_CODE, intent);
-                    }
-                }
+    ActivityResultLauncher<Intent> startActivityForResult = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+        if (result != null) {
+            switch (result.getResultCode()) {
+                case RequestCodes.REQUEST_CREATE_LIST_CODE:
+                    todosLists.clear();
+                    todoListAdapter.notifyDataSetChanged();
+                    requestTodoList();
+                    break;
+                case RequestCodes.REQUEST_UPDATE_LIST_CODE:
+                    sharedViewModel.setRequestCode(RequestCodes.REQUEST_ACTION_TODO_CODE);
+                    dismiss();
+                    break;
+            }
         }
-    }
+    });
 }
